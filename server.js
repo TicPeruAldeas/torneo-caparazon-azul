@@ -31,11 +31,25 @@ function save() {
 
 const hashToken = t => crypto.createHash("sha256").update(String(t)).digest("hex").slice(0, 24);
 
-// Lo que ven todos: nunca el token, solo su hash
+// Imágenes por defecto: public/img/<id del personaje>.<png|jpg|webp|gif|mp4|webm>
+const IMG_DIR = path.join(__dirname, "public", "img");
+const EXT_TYPES = Object.fromEntries(Object.entries(MEDIA_TYPES).map(([t, e]) => [e, t]));
+EXT_TYPES.jpeg = "image/jpeg";
+const defaultMedia = {};
+try {
+  for (const f of fs.readdirSync(IMG_DIR)) {
+    const ext = path.extname(f).slice(1).toLowerCase(), id = path.basename(f, path.extname(f)).toLowerCase();
+    if (CHAR_BY_ID[id] && EXT_TYPES[ext]) defaultMedia[id] = { url: "/img/" + encodeURIComponent(f), type: EXT_TYPES[ext] };
+  }
+} catch {}
+
+// Lo que ven todos: nunca el token, solo su hash. Lo subido desde la página gana sobre public/img
 function publicState() {
+  const media = { ...defaultMedia };
+  for (const [id, m] of Object.entries(state.media)) media[id] = { url: "/media/" + encodeURIComponent(m.file), type: m.type, uploaded: true };
   return {
     mode: state.mode,
-    media: state.media,
+    media,
     picks: state.picks.map(({ token, ...p }) => p)
   };
 }
@@ -85,13 +99,11 @@ app.post("/api/pick", (req, res) => {
   if (typeof token !== "string" || token.length < 16) return res.status(400).json({ error: "Recarga la página e inténtalo de nuevo." });
 
   const owner = hashToken(token);
-  const clash = state.picks.find(p => p.owner !== owner && p.color === color &&
-    (state.mode === "global" || p.character === character));
-  if (clash) {
-    const who = state.mode === "global" && clash.character !== character
-      ? `${clash.name} (${CHAR_BY_ID[clash.character]?.name})` : clash.name;
-    return res.status(409).json({ error: `Llegaste tarde: ${who} ya tiene ese color.` });
-  }
+  const others = state.picks.filter(p => p.owner !== owner);
+  const charClash = others.find(p => p.character === character);
+  if (charClash) return res.status(409).json({ error: `Llegaste tarde: ${charClash.name} ya es ${c.name}.` });
+  const colorClash = state.mode === "global" && others.find(p => p.color === color);
+  if (colorClash) return res.status(409).json({ error: `Llegaste tarde: ${colorClash.name} (${CHAR_BY_ID[colorClash.character]?.name}) ya va de ese color.` });
   state.picks = state.picks.filter(p => p.owner !== owner);
   state.picks.push({ id: `${character}__${color}`, character, color, name, owner, token, at: Date.now() });
   save(); broadcast();

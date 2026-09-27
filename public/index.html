@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Torneo Caparazón Azul</title>
+<title>Torneo Caparazón Azul de Charkin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Figtree:wght@400;600;800&display=swap">
@@ -87,6 +87,11 @@
   .card { display: grid; gap: 6px; align-content: start; }
   .char { font: inherit; color: inherit; cursor: pointer; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 8px 8px 10px; display: grid; justify-items: center; gap: 6px; text-align: center; transition: transform .12s, border-color .12s; }
   .char:hover { transform: translateY(-2px); border-color: var(--ink); }
+  .char.taken { cursor: not-allowed; background: var(--surface-2); transform: none; border-color: var(--line); }
+  .char.taken .media { filter: grayscale(1); opacity: .45; }
+  .char.taken .nm { color: var(--muted); }
+  .char.mine { border: 2px solid var(--ok); padding: 7px 7px 9px; }
+  .char.mine .free { color: var(--ok); font-weight: 700; }
   .char[aria-pressed="true"] { border: 2px solid var(--accent); padding: 7px 7px 9px; box-shadow: 0 4px 0 var(--accent); }
   .media { width: 100%; max-width: 100%; aspect-ratio: 1; border-radius: 8px; overflow: hidden; display: grid; place-items: center; }
   .media img, .media video { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -169,11 +174,11 @@
           <rect x="16" y="68" width="88" height="14" rx="7" fill="#FFFFFF" stroke="#15172B" stroke-width="3"/>
         </svg>
         <div>
-          <span class="edition">Edición 1</span>
+          <span class="edition">Edición 1 · Cumpleaños de Charkin</span>
           <h1>Torneo <span>Caparazón Azul</span></h1>
         </div>
       </div>
-      <p class="lede">Escoge tu personaje de Mario Kart o Mario Party Jamboree y luego un color. Cada color se reserva una sola vez: el día del torneo vienes vestido de ese color.</p>
+      <p class="lede">El torneo del cumpleaños de Charkin. Escoge tu personaje de Mario Kart o Mario Party Jamboree: cada personaje es de una sola persona. Luego elige su color, porque ese día vienes vestido de ese color.</p>
     </div>
     <div class="counter"><b id="count">0</b> corredores en la parrilla</div>
   </header>
@@ -209,10 +214,10 @@
       <ul class="grid-list" id="list"></ul>
       <div class="admin" id="admin" hidden>
         <b>Organizador</b>
-        <span>¿Qué no se puede repetir?</span>
+        <span>Los personajes nunca se repiten. ¿Y los colores?</span>
         <div class="seg">
-          <button id="mode-char" data-mode="personaje">Color por personaje</button>
-          <button id="mode-global" data-mode="global">Color en todo el grupo</button>
+          <button id="mode-char" data-mode="personaje">Se pueden repetir</button>
+          <button id="mode-global" data-mode="global">Tampoco se repiten</button>
         </div>
         <button class="rel" id="logout" style="justify-self:start">Salir del modo organizador</button>
       </div>

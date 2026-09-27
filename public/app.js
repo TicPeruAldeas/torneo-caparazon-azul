@@ -48,10 +48,10 @@ const nameInput = $("name");
 nameInput.value = storageGet("torneo-name") || "";
 nameInput.addEventListener("input", () => { storageSet("torneo-name", nameInput.value); renderAction(); });
 
-function takenBy(charId, colorId) {
-  return state.mode === "global"
-    ? state.picks.find(p => p.color === colorId)
-    : state.picks.find(p => p.character === charId && p.color === colorId);
+// Cada personaje es de una sola persona; el color solo se bloquea si el organizador lo pide
+function charOwner(charId) { return state.picks.find(p => p.character === charId && p.owner !== state.owner); }
+function colorOwner(colorId) {
+  return state.mode === "global" ? state.picks.find(p => p.color === colorId && p.owner !== state.owner) : null;
 }
 function myPick() { return state.picks.find(p => p.owner === state.owner); }
 function setMsg(text, kind = "") { const m = $("msg"); m.textContent = text; m.className = "msg " + kind; }
@@ -60,12 +60,12 @@ function setMsg(text, kind = "") { const m = $("msg"); m.textContent = text; m.c
 const mediaCache = new Map();
 function mediaEl(c, where = "card") {
   const m = state.media[c.id];
-  const key = `${where}:${c.id}:${m?.file || ""}`;
-  if (m?.file && mediaCache.has(key)) return mediaCache.get(key);
+  const key = `${where}:${c.id}:${m?.url || ""}`;
+  if (m?.url && mediaCache.has(key)) return mediaCache.get(key);
   const box = h("span", { class: "media" });
-  if (m?.file) {
+  if (m?.url) {
     mediaCache.set(key, box);
-    const src = "/media/" + encodeURIComponent(m.file);
+    const src = m.url;
     if ((m.type || "").startsWith("video/")) {
       const v = h("video", { src, autoplay: true, loop: true, playsinline: true, "aria-label": c.name });
       v.muted = true;
@@ -85,18 +85,21 @@ function mediaEl(c, where = "card") {
 function renderChars() {
   const box = $("chars"); box.replaceChildren();
   for (const c of CHARS) {
-    const free = c.colors.filter(col => !takenBy(c.id, col)).length;
+    const owner = charOwner(c.id);
+    const mine = myPick()?.character === c.id;
     const card = h("div", { class: "card" },
       h("button", {
-        class: "char", "aria-pressed": String(state.selChar === c.id),
+        class: "char" + (owner ? " taken" : "") + (mine ? " mine" : ""),
+        "aria-pressed": String(state.selChar === c.id),
+        disabled: !!owner,
         onclick: () => { state.selChar = c.id; state.selColor = null; setMsg(""); render(); }
       },
         mediaEl(c),
         h("span", { class: "nm" }, c.name),
-        h("span", { class: "free" + (free === 0 ? " full" : "") }, free === 0 ? "Sin colores" : `${free} de ${c.colors.length} libres`)
+        h("span", { class: "free" + (owner ? " full" : "") }, owner ? `Lo tiene ${owner.name}` : (mine ? "Es tuyo" : "Disponible"))
       ));
     if (state.isOwner) {
-      const has = !!state.media[c.id]?.file;
+      const has = !!state.media[c.id]?.uploaded;
       card.append(h("div", { class: "owner-tools" },
         h("button", { onclick: () => pickMedia(c.id) }, has ? "Cambiar foto/video" : "Subir foto/video"),
         has ? h("button", { onclick: () => removeMedia(c.id) }, "Quitar") : null
@@ -111,18 +114,20 @@ function renderSwatches() {
   const c = CHAR_BY_ID[state.selChar];
   $("color-title").textContent = c ? `Color de ${c.name}` : "Color";
   if (!c) { box.append(h("div", { class: "colors-empty" }, "Primero elige un personaje.")); return; }
-  const free = c.colors.filter(col => !takenBy(c.id, col)).length;
+  const owner = charOwner(c.id);
   box.append(h("div", { class: "preview" }, mediaEl(c, "preview"),
-    h("p", {}, h("b", {}, c.name), `${free} de ${c.colors.length} colores libres`)));
+    h("p", {}, h("b", {}, c.name), owner ? `Ya lo tiene ${owner.name}. Elige otro personaje.` : "Elige de qué color vas a ir.")));
   const grid = h("div", { class: "swatches" });
+  const mp = myPick();
   for (const colId of c.colors) {
     const col = COLORS[colId];
-    const t = takenBy(c.id, colId);
-    const mine = t && t.owner === state.owner;
+    const mine = mp && mp.character === c.id && mp.color === colId;
+    const other = colorOwner(colId);
+    const t = owner || other;
     let sub = "Libre";
     if (mine) sub = "Tu color";
-    else if (t) sub = state.mode === "global" && t.character !== c.id
-      ? `${t.name} (${CHAR_BY_ID[t.character]?.name || "otro"})` : `Lo tiene ${t.name}`;
+    else if (owner) sub = "No disponible";
+    else if (other) sub = `Ya va de ${col.n.toLowerCase()}: ${other.name}`;
     grid.append(h("button", {
       class: "sw" + (t && !mine ? " taken" : "") + (mine ? " mine" : ""),
       "aria-pressed": String(state.selColor === colId),
@@ -152,10 +157,10 @@ function renderList() {
   const list = $("list"); list.replaceChildren();
   const picks = [...state.picks].sort((a, b) => (a.at || 0) - (b.at || 0));
   $("count").textContent = picks.length;
-  $("mode-label").textContent = state.mode === "global" ? "Colores únicos en el grupo" : "Colores únicos por personaje";
+  $("mode-label").textContent = state.mode === "global" ? "Personaje y color únicos" : "Un personaje por persona";
   $("mode-hint").textContent = state.mode === "global"
-    ? "Nadie más del grupo puede usar el mismo color"
-    : "Dos personas no pueden ser el mismo personaje del mismo color";
+    ? "Nadie más puede ir del mismo color"
+    : "El color es el que usarás ese día";
   if (!picks.length) {
     list.append(h("li", { class: "empty-list", style: "display:block" },
       state.ready ? "Nadie ha elegido todavía. Sé el primero en la parrilla." : "Cargando la parrilla…"));
