@@ -1,0 +1,157 @@
+const express = require("express");
+const fs = require("fs");
+const path = require("path");
+const crypto = require("crypto");
+
+const PORT = process.env.PORT || 8080;
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, "data");
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
+const MEDIA_DIR = path.join(DATA_DIR, "media");
+const STATE_FILE = path.join(DATA_DIR, "state.json");
+const MAX_UPLOAD = 20 * 1024 * 1024;
+
+const CHARS = require("./public/characters.json");
+const CHAR_BY_ID = Object.fromEntries(CHARS.characters.map(c => [c.id, c]));
+const MEDIA_TYPES = {
+  "image/png": "png", "image/jpeg": "jpg", "image/gif": "gif",
+  "image/webp": "webp", "video/mp4": "mp4", "video/webm": "webm"
+};
+
+fs.mkdirSync(MEDIA_DIR, { recursive: true });
+
+// Estado: picks = reservas, mode = regla de colores, media = foto/video por personaje
+let state = { picks: [], mode: "personaje", media: {} };
+try { state = { ...state, ...JSON.parse(fs.readFileSync(STATE_FILE, "utf8")) }; } catch {}
+
+function save() {
+  const tmp = STATE_FILE + ".tmp";
+  fs.writeFileSync(tmp, JSON.stringify(state, null, 2));
+  fs.renameSync(tmp, STATE_FILE);
+}
+
+const hashToken = t => crypto.createHash("sha256").update(String(t)).digest("hex").slice(0, 24);
+
+// Lo que ven todos: nunca el token, solo su hash
+function publicState() {
+  return {
+    mode: state.mode,
+    media: state.media,
+    picks: state.picks.map(({ token, ...p }) => p)
+  };
+}
+
+const clients = new Set();
+function broadcast() {
+  const data = `data: ${JSON.stringify(publicState())}\n\n`;
+  for (const res of clients) res.write(data);
+}
+
+function isAdmin(req) {
+  const given = req.get("x-admin-password") || "";
+  if (!ADMIN_PASSWORD || !given) return false;
+  const a = Buffer.from(given), b = Buffer.from(ADMIN_PASSWORD);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+function requireAdmin(req, res, next) {
+  if (!ADMIN_PASSWORD) return res.status(503).json({ error: "Falta configurar ADMIN_PASSWORD en el servidor." });
+  if (!isAdmin(req)) return res.status(401).json({ error: "Contraseña de organizador incorrecta." });
+  next();
+}
+
+const app = express();
+app.disable("x-powered-by");
+app.use(express.json({ limit: "10kb" }));
+app.use(express.static(path.join(__dirname, "public")));
+app.use("/media", express.static(MEDIA_DIR, { maxAge: "7d", immutable: true }));
+
+app.get("/health", (req, res) => res.json({ ok: true }));
+app.get("/api/state", (req, res) => res.json(publicState()));
+
+app.get("/api/events", (req, res) => {
+  res.set({ "Content-Type": "text/event-stream", "Cache-Control": "no-cache", Connection: "keep-alive" });
+  res.flushHeaders();
+  res.write(`data: ${JSON.stringify(publicState())}\n\n`);
+  clients.add(res);
+  const ping = setInterval(() => res.write(": ping\n\n"), 25000);
+  req.on("close", () => { clearInterval(ping); clients.delete(res); });
+});
+
+app.post("/api/pick", (req, res) => {
+  const { character, color, token } = req.body || {};
+  const name = String(req.body?.name || "").trim().slice(0, 40);
+  const c = CHAR_BY_ID[character];
+  if (!c || !c.colors.includes(color)) return res.status(400).json({ error: "Personaje o color no válido." });
+  if (!name) return res.status(400).json({ error: "Escribe tu nombre." });
+  if (typeof token !== "string" || token.length < 16) return res.status(400).json({ error: "Recarga la página e inténtalo de nuevo." });
+
+  const owner = hashToken(token);
+  const clash = state.picks.find(p => p.owner !== owner && p.color === color &&
+    (state.mode === "global" || p.character === character));
+  if (clash) {
+    const who = state.mode === "global" && clash.character !== character
+      ? `${clash.name} (${CHAR_BY_ID[clash.character]?.name})` : clash.name;
+    return res.status(409).json({ error: `Llegaste tarde: ${who} ya tiene ese color.` });
+  }
+  state.picks = state.picks.filter(p => p.owner !== owner);
+  state.picks.push({ id: `${character}__${color}`, character, color, name, owner, token, at: Date.now() });
+  save(); broadcast();
+  res.json({ ok: true, owner });
+});
+
+app.delete("/api/pick/:id", (req, res) => {
+  const pick = state.picks.find(p => p.id === req.params.id);
+  if (!pick) return res.json({ ok: true });
+  const token = req.get("x-player-token") || "";
+  if (!isAdmin(req) && pick.token !== token) return res.status(403).json({ error: "Solo puedes liberar tu propia reserva." });
+  state.picks = state.picks.filter(p => p !== pick);
+  save(); broadcast();
+  res.json({ ok: true });
+});
+
+app.post("/api/admin/login", requireAdmin, (req, res) => res.json({ ok: true }));
+
+app.post("/api/admin/mode", requireAdmin, (req, res) => {
+  const mode = req.body?.mode === "global" ? "global" : "personaje";
+  state.mode = mode;
+  save(); broadcast();
+  res.json({ ok: true });
+});
+
+function removeMediaFile(charId) {
+  const old = state.media[charId];
+  if (old?.file) fs.promises.unlink(path.join(MEDIA_DIR, old.file)).catch(() => {});
+}
+
+app.put("/api/admin/media/:charId", requireAdmin,
+  express.raw({ type: Object.keys(MEDIA_TYPES), limit: MAX_UPLOAD }),
+  (req, res) => {
+    const c = CHAR_BY_ID[req.params.charId];
+    const type = (req.get("content-type") || "").split(";")[0].trim();
+    const ext = MEDIA_TYPES[type];
+    if (!c) return res.status(404).json({ error: "Personaje no encontrado." });
+    if (!ext || !Buffer.isBuffer(req.body) || !req.body.length) return res.status(415).json({ error: "Formato no admitido. Usa JPG, PNG, GIF, WebP, MP4 o WebM." });
+    const file = `${c.id}-${Date.now()}.${ext}`;
+    fs.writeFileSync(path.join(MEDIA_DIR, file), req.body);
+    removeMediaFile(c.id);
+    state.media[c.id] = { file, type };
+    save(); broadcast();
+    res.json({ ok: true, file });
+  });
+
+app.delete("/api/admin/media/:charId", requireAdmin, (req, res) => {
+  removeMediaFile(req.params.charId);
+  delete state.media[req.params.charId];
+  save(); broadcast();
+  res.json({ ok: true });
+});
+
+app.use((err, req, res, next) => {
+  if (err.type === "entity.too.large") return res.status(413).json({ error: "El archivo pesa más de 20 MB. Usa uno más liviano." });
+  console.error(err);
+  res.status(500).json({ error: "Error del servidor. Inténtalo de nuevo." });
+});
+
+app.listen(PORT, () => {
+  console.log(`Torneo Caparazón Azul en puerto ${PORT} · datos en ${DATA_DIR}`);
+  if (!ADMIN_PASSWORD) console.warn("ADMIN_PASSWORD no está configurado: el modo organizador está desactivado.");
+});
