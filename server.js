@@ -4,7 +4,8 @@ const path = require("path");
 const crypto = require("crypto");
 
 const PORT = process.env.PORT || 8080;
-const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, "data");
+// Con volumen de Railway se guarda siempre ahí, aunque DATA_DIR esté mal configurada
+const DATA_DIR = process.env.RAILWAY_VOLUME_MOUNT_PATH || process.env.DATA_DIR || path.join(__dirname, "data");
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
 const MEDIA_DIR = path.join(DATA_DIR, "media");
 const STATE_FILE = path.join(DATA_DIR, "state.json");
