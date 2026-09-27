@@ -30,6 +30,28 @@ function save() {
   fs.renameSync(tmp, STATE_FILE);
 }
 
+// Restaura reservas perdidas desde restore.json, una sola vez por id y sin pisar personajes ya tomados.
+// El dueño queda al azar: solo el organizador puede liberarlas.
+try {
+  const restore = JSON.parse(fs.readFileSync(path.join(__dirname, "restore.json"), "utf8"));
+  state.restored = state.restored || [];
+  if (restore.id && !state.restored.includes(restore.id)) {
+    const base = Math.min(Date.now(), ...state.picks.map(p => p.at || Date.now())) - restore.picks.length * 1000;
+    let added = 0;
+    restore.picks.forEach((r, i) => {
+      if (!CHAR_BY_ID[r.character] || state.picks.some(p => p.character === r.character)) return;
+      state.picks.push({ id: r.character, character: r.character, name: String(r.name).slice(0, 40),
+        owner: crypto.randomBytes(12).toString("hex"), token: crypto.randomBytes(24).toString("hex"), at: base + i * 1000 });
+      added++;
+    });
+    state.restored.push(restore.id);
+    save();
+    console.log(`Restauradas ${added} de ${restore.picks.length} reservas (${restore.id})`);
+  }
+} catch (err) {
+  if (err.code !== "ENOENT") console.error("No se pudo restaurar:", err.message);
+}
+
 const hashToken = t => crypto.createHash("sha256").update(String(t)).digest("hex").slice(0, 24);
 
 // Imágenes por defecto: public/img/<id del personaje>.<png|jpg|webp|gif|mp4|webm>
