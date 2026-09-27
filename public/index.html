@@ -100,28 +100,10 @@
   .owner-tools { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
   .owner-tools button { font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; background: none; border: 1px dashed var(--line); color: var(--muted); border-radius: 6px; padding: 3px 8px; }
   .owner-tools button:hover { color: var(--accent); border-color: var(--accent); }
-  .preview { display: grid; grid-template-columns: 140px 1fr; gap: 16px; align-items: center; }
-  .preview .media { border: 1px solid var(--line); }
-  .preview p { margin: 0; color: var(--muted); }
-  .preview b { display: block; font-family: var(--display); font-weight: 400; font-size: 22px; color: var(--ink); }
-  @media (max-width: 480px) { .preview { grid-template-columns: 96px 1fr; } }
   .char .nm { font-weight: 800; font-size: 14px; line-height: 1.15; }
   .char .free { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
   .char .free.full { color: var(--err); }
 
-  .colors-empty { color: var(--muted); padding: 18px; border: 1px dashed var(--line); border-radius: 10px; }
-  .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 10px; }
-  .sw { font: inherit; color: inherit; cursor: pointer; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px; display: grid; grid-template-columns: 34px 1fr; gap: 10px; align-items: center; text-align: left; }
-  .sw .dot { width: 34px; height: 34px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0,0,0,.18); position: relative; }
-  .sw .lbl { font-weight: 700; font-size: 14px; line-height: 1.2; }
-  .sw .sub { display: block; font-weight: 400; font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
-  .sw[aria-pressed="true"] { border: 2px solid var(--accent); padding: 9px; }
-  .sw.taken { cursor: not-allowed; background: var(--surface-2); }
-  .sw.taken .dot::after { content: ""; position: absolute; inset: 0; border-radius: 50%;
-    background: repeating-linear-gradient(45deg, transparent 0 4px, rgba(0,0,0,.45) 4px 6px); }
-  .sw.taken .lbl { text-decoration: line-through; color: var(--muted); }
-  .sw.mine { border: 2px solid var(--ok); padding: 9px; }
-  .sw.mine .sub { color: var(--ok); font-weight: 600; }
 
   .actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
   .btn { font: inherit; font-weight: 800; cursor: pointer; border-radius: 8px; padding: 11px 18px; border: 2px solid var(--ink); background: var(--ink); color: var(--bg); }
@@ -132,11 +114,28 @@
   .msg.err { color: var(--err); }
   .msg.ok { color: var(--ok); }
 
-  aside { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
-  @media (max-width: 900px) { aside { position: static; } }
-  aside .top { padding: 14px 16px 10px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; border-bottom: 1px solid var(--line); }
-  aside h2 { font-family: var(--display); font-weight: 400; font-size: 18px; margin: 0; letter-spacing: .03em; }
-  aside .mode { font-size: 12px; color: var(--muted); }
+  .side { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); display: grid; gap: 16px; }
+  @media (max-width: 900px) { .side { position: static; } }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .detail { padding: 16px; display: grid; gap: 14px; scroll-margin-top: 16px; }
+  .detail.empty { color: var(--muted); text-align: center; padding: 28px 16px; }
+  .detail .media { border-radius: 10px; border: 1px solid var(--line); max-height: 300px; }
+  .detail h3 { font-family: var(--display); font-weight: 400; font-size: 26px; line-height: 1.05; margin: 0; }
+  .detail .status { font-size: 13px; color: var(--muted); }
+  .detail .status.full { color: var(--err); font-weight: 700; }
+  .detail .status.mine { color: var(--ok); font-weight: 700; }
+  .duo-label { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .chip { display: grid; gap: 8px; justify-items: start; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); }
+  .chip i { display: block; width: 100%; height: 44px; border-radius: 8px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.18); }
+  .chip b { font-size: 15px; }
+  .detail .btn { width: 100%; }
+  .dots { display: flex; }
+  .dots i { width: 22px; height: 22px; border-radius: 50%; box-shadow: 0 0 0 2px var(--surface), inset 0 0 0 1px rgba(0,0,0,.18); }
+  .dots i + i { margin-left: -6px; }
+  .panel .top { padding: 14px 16px 10px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; border-bottom: 1px solid var(--line); }
+  .panel h2 { font-family: var(--display); font-weight: 400; font-size: 18px; margin: 0; letter-spacing: .03em; }
+  .panel .mode { font-size: 12px; color: var(--muted); }
   .grid-list { list-style: none; margin: 0; padding: 0; max-height: 70vh; overflow-y: auto; }
   .grid-list li { display: grid; grid-template-columns: 34px 30px 1fr auto; gap: 10px; align-items: center; padding: 9px 16px; border-bottom: 1px solid var(--line); }
   .grid-list li:last-child { border-bottom: 0; }
@@ -179,7 +178,7 @@
           <h1>Torneo <span>Caparazón Azul</span></h1>
         </div>
       </div>
-      <p class="lede">El torneo del cumpleaños de Charkin. Escoge tu personaje de Mario Kart o Mario Party Jamboree: cada personaje es de una sola persona. Luego elige su color, porque ese día vienes vestido de ese color.</p>
+      <p class="lede">El torneo del cumpleaños de Charkin. Escoge tu personaje de Mario Kart o Mario Party Jamboree: cada personaje es de una sola persona, y ese día vienes vestido con sus 2 colores.</p>
     </div>
     <div class="counter"><b id="count">0</b> corredores en la parrilla</div>
   </header>
@@ -196,38 +195,29 @@
       </section>
 
       <section class="step">
-        <div class="step-h"><span class="n">2</span><h2>Personaje</h2><span class="hint" id="char-hint">Toca uno para ver sus colores</span></div>
+        <div class="step-h"><span class="n">2</span><h2>Personaje</h2><span class="hint">Toca uno para ver sus colores</span></div>
         <div class="chars" id="chars"></div>
-      </section>
-
-      <section class="step">
-        <div class="step-h"><span class="n">3</span><h2 id="color-title">Color</h2><span class="hint" id="mode-hint"></span></div>
-        <div id="swatches"></div>
-        <div class="actions">
-          <button class="btn primary" id="reserve" disabled>Reservar</button>
-          <span class="msg" id="msg" role="status" aria-live="polite"></span>
-        </div>
       </section>
     </main>
 
-    <aside aria-label="Parrilla de salida">
-      <div class="top"><h2>Parrilla</h2><span class="mode" id="mode-label"></span></div>
-      <ul class="grid-list" id="list"></ul>
-      <div class="admin" id="admin" hidden>
-        <b>Organizador</b>
-        <span>Los personajes nunca se repiten. ¿Y los colores?</span>
-        <div class="seg">
-          <button id="mode-char" data-mode="personaje">Se pueden repetir</button>
-          <button id="mode-global" data-mode="global">Tampoco se repiten</button>
+    <div class="side">
+      <section class="panel detail" id="detail" aria-live="polite"></section>
+
+      <aside class="panel" aria-label="Parrilla de salida">
+        <div class="top"><h2>Parrilla</h2><span class="mode">Un personaje por persona</span></div>
+        <ul class="grid-list" id="list"></ul>
+        <div class="admin" id="admin" hidden>
+          <b>Organizador</b>
+          <span>Puedes liberar cualquier reserva y subir o cambiar la foto de cada personaje.</span>
+          <button class="rel" id="logout" style="justify-self:start">Salir del modo organizador</button>
         </div>
-        <button class="rel" id="logout" style="justify-self:start">Salir del modo organizador</button>
-      </div>
-      <form class="admin" id="login" hidden>
-        <b>Organizador</b>
-        <input type="password" id="admin-pass" placeholder="Contraseña" autocomplete="current-password">
-        <div class="actions"><button class="btn" type="submit">Entrar</button><span class="msg" id="login-msg"></span></div>
-      </form>
-    </aside>
+        <form class="admin" id="login" hidden>
+          <b>Organizador</b>
+          <input type="password" id="admin-pass" placeholder="Contraseña" autocomplete="current-password">
+          <div class="actions"><button class="btn" type="submit">Entrar</button><span class="msg" id="login-msg"></span></div>
+        </form>
+      </aside>
+    </div>
   </div>
   <footer class="foot"><button class="linkish" id="show-login">Soy organizador</button></footer>
 </div>

@@ -18,7 +18,7 @@ let COLORS = {}, CHARS = [], CHAR_BY_ID = {};
 
 const state = {
   token: null, owner: null, adminPass: null, isOwner: false, ready: false,
-  picks: [], mode: "personaje", media: {}, selChar: null, selColor: null, busy: false, uploadFor: null
+  picks: [], media: {}, selChar: null, busy: false, uploadFor: null
 };
 
 // Token secreto por navegador: identifica tu reserva sin cuentas
@@ -46,15 +46,19 @@ async function api(method, url, body, headers = {}) {
 
 const nameInput = $("name");
 nameInput.value = storageGet("torneo-name") || "";
-nameInput.addEventListener("input", () => { storageSet("torneo-name", nameInput.value); renderAction(); });
+nameInput.addEventListener("input", () => { storageSet("torneo-name", nameInput.value); renderDetail(); });
 
-// Cada personaje es de una sola persona; el color solo se bloquea si el organizador lo pide
+// Cada personaje es de una sola persona y trae sus 2 colores
 function charOwner(charId) { return state.picks.find(p => p.character === charId && p.owner !== state.owner); }
-function colorOwner(colorId) {
-  return state.mode === "global" ? state.picks.find(p => p.color === colorId && p.owner !== state.owner) : null;
-}
 function myPick() { return state.picks.find(p => p.owner === state.owner); }
-function setMsg(text, kind = "") { const m = $("msg"); m.textContent = text; m.className = "msg " + kind; }
+const colorNames = c => c.colors.map(id => COLORS[id]?.n.toLowerCase()).join(" y ");
+
+state.msg = { text: "", kind: "" };
+function setMsg(text, kind = "") {
+  state.msg = { text, kind };
+  const m = $("msg");
+  if (m) { m.textContent = text; m.className = "msg " + kind; }
+}
 
 // Foto o mini video del personaje; si no hay, emblema con sus iniciales
 const mediaCache = new Map();
@@ -65,13 +69,12 @@ function mediaEl(c, where = "card") {
   const box = h("span", { class: "media" });
   if (m?.url) {
     mediaCache.set(key, box);
-    const src = m.url;
     if ((m.type || "").startsWith("video/")) {
-      const v = h("video", { src, autoplay: true, loop: true, playsinline: true, "aria-label": c.name });
+      const v = h("video", { src: m.url, autoplay: true, loop: true, playsinline: true, "aria-label": c.name });
       v.muted = true;
       box.append(v);
     } else {
-      box.append(h("img", { src, alt: c.name, loading: "lazy" }));
+      box.append(h("img", { src: m.url, alt: c.name, loading: "lazy" }));
     }
   } else {
     box.classList.add("emblem");
@@ -82,17 +85,26 @@ function mediaEl(c, where = "card") {
   return box;
 }
 
+function dots(c) {
+  return h("span", { class: "dots", "aria-hidden": "true" }, c.colors.map(id => h("i", { style: `background:${COLORS[id]?.hex}` })));
+}
+
+function selectChar(id) {
+  state.selChar = id; setMsg(""); render();
+  if (window.matchMedia("(max-width: 900px)").matches) $("detail").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 function renderChars() {
   const box = $("chars"); box.replaceChildren();
+  const mp = myPick();
   for (const c of CHARS) {
     const owner = charOwner(c.id);
-    const mine = myPick()?.character === c.id;
+    const mine = mp?.character === c.id;
     const card = h("div", { class: "card" },
       h("button", {
         class: "char" + (owner ? " taken" : "") + (mine ? " mine" : ""),
         "aria-pressed": String(state.selChar === c.id),
-        disabled: !!owner,
-        onclick: () => { state.selChar = c.id; state.selColor = null; setMsg(""); render(); }
+        onclick: () => selectChar(c.id)
       },
         mediaEl(c),
         h("span", { class: "nm" }, c.name),
@@ -109,70 +121,54 @@ function renderChars() {
   }
 }
 
-function renderSwatches() {
-  const box = $("swatches"); box.replaceChildren();
+// Panel lateral: foto grande, sus 2 colores y el botón para reservar
+function renderDetail() {
+  const box = $("detail"); box.replaceChildren();
   const c = CHAR_BY_ID[state.selChar];
-  $("color-title").textContent = c ? `Color de ${c.name}` : "Color";
-  if (!c) { box.append(h("div", { class: "colors-empty" }, "Primero elige un personaje.")); return; }
-  const owner = charOwner(c.id);
-  box.append(h("div", { class: "preview" }, mediaEl(c, "preview"),
-    h("p", {}, h("b", {}, c.name), owner ? `Ya lo tiene ${owner.name}. Elige otro personaje.` : "Elige de qué color vas a ir.")));
-  const grid = h("div", { class: "swatches" });
-  const mp = myPick();
-  for (const colId of c.colors) {
-    const col = COLORS[colId];
-    const mine = mp && mp.character === c.id && mp.color === colId;
-    const other = colorOwner(colId);
-    const t = owner || other;
-    let sub = "Libre";
-    if (mine) sub = "Tu color";
-    else if (owner) sub = "No disponible";
-    else if (other) sub = `Ya va de ${col.n.toLowerCase()}: ${other.name}`;
-    grid.append(h("button", {
-      class: "sw" + (t && !mine ? " taken" : "") + (mine ? " mine" : ""),
-      "aria-pressed": String(state.selColor === colId),
-      disabled: !!(t && !mine),
-      "aria-label": `${col.n}: ${sub}`,
-      onclick: () => { state.selColor = colId; setMsg(""); render(); }
-    },
-      h("span", { class: "dot", style: `background:${col.hex}` }),
-      h("span", { class: "lbl" }, col.n, h("span", { class: "sub" }, sub))
-    ));
+  if (!c) {
+    box.classList.add("empty");
+    box.append("Toca un personaje para ver su foto y sus 2 colores.");
+    return;
   }
-  box.append(grid);
-}
-
-function renderAction() {
-  const btn = $("reserve");
-  const c = CHAR_BY_ID[state.selChar], col = COLORS[state.selColor];
-  const mp = myPick();
-  const already = mp && c && mp.character === c.id && mp.color === state.selColor;
-  if (c && col) btn.textContent = already ? `Ya es tuyo: ${c.name} ${col.n.toLowerCase()}`
-    : (mp ? `Cambiar a ${c.name} ${col.n.toLowerCase()}` : `Reservar ${c.name} ${col.n.toLowerCase()}`);
-  else btn.textContent = "Reservar";
-  btn.disabled = !state.ready || state.busy || !c || !col || already || !nameInput.value.trim();
+  box.classList.remove("empty");
+  const owner = charOwner(c.id), mp = myPick(), mine = mp?.character === c.id;
+  const name = nameInput.value.trim();
+  let label = mp ? `Cambiarme a ${c.name}` : `Reservar a ${c.name}`;
+  if (mine) label = `${c.name} ya es tuyo`;
+  else if (owner) label = "No disponible";
+  const btn = h("button", { class: "btn primary", id: "reserve", onclick: reserve }, label);
+  btn.disabled = !state.ready || state.busy || !!owner || mine || !name;
+  box.append(
+    mediaEl(c, "detail"),
+    h("div", {}, h("h3", {}, c.name),
+      h("span", { class: "status" + (owner ? " full" : "") + (mine ? " mine" : "") },
+        owner ? `Ya lo tiene ${owner.name}. Elige otro personaje.` : (mine ? "Es tu personaje." : "Disponible"))),
+    h("span", { class: "duo-label" }, "Sus 2 colores"),
+    h("div", { class: "duo" }, c.colors.map(id => h("span", { class: "chip" },
+      h("i", { style: `background:${COLORS[id]?.hex}` }), h("b", {}, COLORS[id]?.n)))),
+    btn,
+    !name && !owner && !mine ? h("span", { class: "msg" }, "Escribe tu nombre arriba para reservar.") : null,
+    h("span", { class: "msg " + state.msg.kind, id: "msg", role: "status" }, state.msg.text)
+  );
 }
 
 function renderList() {
   const list = $("list"); list.replaceChildren();
   const picks = [...state.picks].sort((a, b) => (a.at || 0) - (b.at || 0));
   $("count").textContent = picks.length;
-  $("mode-label").textContent = state.mode === "global" ? "Personaje y color únicos" : "Un personaje por persona";
-  $("mode-hint").textContent = state.mode === "global"
-    ? "Nadie más puede ir del mismo color"
-    : "El color es el que usarás ese día";
   if (!picks.length) {
     list.append(h("li", { class: "empty-list", style: "display:block" },
       state.ready ? "Nadie ha elegido todavía. Sé el primero en la parrilla." : "Cargando la parrilla…"));
     return;
   }
   picks.forEach((p, i) => {
-    const c = CHAR_BY_ID[p.character], col = COLORS[p.color];
+    const c = CHAR_BY_ID[p.character];
     const mine = p.owner === state.owner;
     list.append(h("li", { class: mine ? "me" : "" },
       h("span", { class: "pos" }, `P${i + 1}`),
-      h("span", { class: "pdot", style: `background:${col?.hex || "#999"}`, title: col?.n || "" }),
-      h("span", { class: "who" }, h("b", {}, p.name + (mine ? " (tú)" : "")), h("span", {}, `${c?.name || p.character} · ${col?.n || p.color}`)),
+      c ? dots(c) : h("span"),
+      h("span", { class: "who" }, h("b", {}, p.name + (mine ? " (tú)" : "")),
+        h("span", {}, c ? `${c.name} · ${colorNames(c)}` : p.character)),
       (mine || state.isOwner) ? h("button", { class: "rel", onclick: () => release(p) }, "Liberar") : h("span")
     ));
   });
@@ -181,21 +177,20 @@ function renderList() {
 function renderAdmin() {
   $("admin").hidden = !state.isOwner;
   $("show-login").hidden = state.isOwner;
-  for (const b of document.querySelectorAll(".seg button")) b.setAttribute("aria-pressed", String(b.dataset.mode === state.mode));
 }
 
 function render() {
-  renderChars(); renderSwatches(); renderAction(); renderList(); renderAdmin();
+  renderChars(); renderDetail(); renderList(); renderAdmin();
   for (const v of document.querySelectorAll("video")) if (v.paused) v.play().catch(() => {});
 }
 
 async function reserve() {
-  const c = CHAR_BY_ID[state.selChar], colId = state.selColor, name = nameInput.value.trim();
-  if (!c || !colId || !name) return;
-  state.busy = true; renderAction(); setMsg("Reservando…");
+  const c = CHAR_BY_ID[state.selChar], name = nameInput.value.trim();
+  if (!c || !name) return;
+  state.busy = true; setMsg("Reservando…"); renderDetail();
   try {
-    await api("POST", "/api/pick", { character: c.id, color: colId, name, token: state.token });
-    setMsg(`Listo: eres ${c.name} ${COLORS[colId].n.toLowerCase()}. Ve preparando la ropa.`, "ok");
+    await api("POST", "/api/pick", { character: c.id, name, token: state.token });
+    setMsg(`Listo: eres ${c.name}. Ese día vienes de ${colorNames(c)}.`, "ok");
   } catch (e) { setMsg(e.message, "err"); }
   finally { state.busy = false; render(); }
 }
@@ -203,13 +198,8 @@ async function reserve() {
 async function release(p) {
   try {
     await api("DELETE", `/api/pick/${encodeURIComponent(p.id)}`, undefined, { "x-player-token": state.token });
-    setMsg(`Se liberó ${CHAR_BY_ID[p.character]?.name} ${COLORS[p.color]?.n.toLowerCase()}.`, "ok");
+    setMsg(`Se liberó ${CHAR_BY_ID[p.character]?.name}.`, "ok");
   } catch (e) { setMsg(e.message, "err"); }
-}
-
-async function setMode(mode) {
-  if (mode === state.mode) return;
-  try { await api("POST", "/api/admin/mode", { mode }); } catch (e) { setMsg(e.message, "err"); }
 }
 
 function pickMedia(charId) {
@@ -248,11 +238,9 @@ $("logout").addEventListener("click", () => {
   state.isOwner = false; state.adminPass = null; storageSet("torneo-admin", null, sessionStorage); render();
 });
 
-$("reserve").addEventListener("click", reserve);
-for (const b of document.querySelectorAll(".seg button")) b.addEventListener("click", () => setMode(b.dataset.mode));
 
 function applyState(s) {
-  state.picks = s.picks || []; state.mode = s.mode === "global" ? "global" : "personaje"; state.media = s.media || {};
+  state.picks = s.picks || []; state.media = s.media || {};
   state.ready = true; render();
 }
 

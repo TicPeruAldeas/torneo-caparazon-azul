@@ -19,8 +19,8 @@ const MEDIA_TYPES = {
 
 fs.mkdirSync(MEDIA_DIR, { recursive: true });
 
-// Estado: picks = reservas, mode = regla de colores, media = foto/video por personaje
-let state = { picks: [], mode: "personaje", media: {} };
+// Estado: picks = reservas (un personaje por persona), media = foto/video subido por personaje
+let state = { picks: [], media: {} };
 try { state = { ...state, ...JSON.parse(fs.readFileSync(STATE_FILE, "utf8")) }; } catch {}
 
 function save() {
@@ -48,7 +48,6 @@ function publicState() {
   const media = { ...defaultMedia };
   for (const [id, m] of Object.entries(state.media)) media[id] = { url: "/media/" + encodeURIComponent(m.file), type: m.type, uploaded: true };
   return {
-    mode: state.mode,
     media,
     picks: state.picks.map(({ token, ...p }) => p)
   };
@@ -91,10 +90,10 @@ app.get("/api/events", (req, res) => {
 });
 
 app.post("/api/pick", (req, res) => {
-  const { character, color, token } = req.body || {};
+  const { character, token } = req.body || {};
   const name = String(req.body?.name || "").trim().slice(0, 40);
   const c = CHAR_BY_ID[character];
-  if (!c || !c.colors.includes(color)) return res.status(400).json({ error: "Personaje o color no válido." });
+  if (!c) return res.status(400).json({ error: "Personaje no válido." });
   if (!name) return res.status(400).json({ error: "Escribe tu nombre." });
   if (typeof token !== "string" || token.length < 16) return res.status(400).json({ error: "Recarga la página e inténtalo de nuevo." });
 
@@ -102,10 +101,8 @@ app.post("/api/pick", (req, res) => {
   const others = state.picks.filter(p => p.owner !== owner);
   const charClash = others.find(p => p.character === character);
   if (charClash) return res.status(409).json({ error: `Llegaste tarde: ${charClash.name} ya es ${c.name}.` });
-  const colorClash = state.mode === "global" && others.find(p => p.color === color);
-  if (colorClash) return res.status(409).json({ error: `Llegaste tarde: ${colorClash.name} (${CHAR_BY_ID[colorClash.character]?.name}) ya va de ese color.` });
   state.picks = state.picks.filter(p => p.owner !== owner);
-  state.picks.push({ id: `${character}__${color}`, character, color, name, owner, token, at: Date.now() });
+  state.picks.push({ id: character, character, name, owner, token, at: Date.now() });
   save(); broadcast();
   res.json({ ok: true, owner });
 });
@@ -121,13 +118,6 @@ app.delete("/api/pick/:id", (req, res) => {
 });
 
 app.post("/api/admin/login", requireAdmin, (req, res) => res.json({ ok: true }));
-
-app.post("/api/admin/mode", requireAdmin, (req, res) => {
-  const mode = req.body?.mode === "global" ? "global" : "personaje";
-  state.mode = mode;
-  save(); broadcast();
-  res.json({ ok: true });
-});
 
 function removeMediaFile(charId) {
   const old = state.media[charId];
