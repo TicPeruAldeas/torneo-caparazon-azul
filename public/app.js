@@ -166,6 +166,7 @@ function renderList() {
     const mine = p.owner === state.owner;
     list.append(h("li", { class: mine ? "me" : "" },
       h("span", { class: "pos" }, `P${i + 1}`),
+      c ? mediaEl(c, "list") : h("span"),
       c ? dots(c) : h("span"),
       h("span", { class: "who" }, h("b", {}, p.name + (mine ? " (tú)" : "")),
         h("span", {}, c ? `${c.name} · ${colorNames(c)}` : p.character)),
