@@ -32,10 +32,6 @@
       "n": "Celeste",
       "hex": "#6CC6F2"
     },
-    "turquesa": {
-      "n": "Turquesa",
-      "hex": "#16B8A6"
-    },
     "blanco": {
       "n": "Blanco",
       "hex": "#FAFAFA"
@@ -44,24 +40,19 @@
       "n": "Negro",
       "hex": "#1B1B1F"
     },
-    "gris": {
-      "n": "Gris",
-      "hex": "#9CA3AF"
-    },
     "marron": {
       "n": "Marrón",
       "hex": "#8B5A2B"
-    },
-    "dorado": {
-      "n": "Dorado",
-      "hex": "#D4A017"
-    },
-    "beige": {
-      "n": "Beige",
-      "hex": "#D9B98C"
     }
   },
   "characters": [
+    {
+      "id": "mario",
+      "name": "Mario",
+      "short": "M",
+      "sig": ["#E3262E", "#fff"],
+      "colors": ["rojo", "azul"]
+    },
     {
       "id": "luigi",
       "name": "Luigi",
@@ -105,11 +96,18 @@
       "colors": ["rosa", "blanco"]
     },
     {
+      "id": "koopa",
+      "name": "Koopa Troopa",
+      "short": "K",
+      "sig": ["#2EA84A", "#FFD21F"],
+      "colors": ["verde", "amarillo"]
+    },
+    {
       "id": "bowserjr",
       "name": "Bowser Jr.",
       "short": "BJ",
       "sig": ["#2EA84A", "#F7851E"],
-      "colors": ["amarillo", "verde"]
+      "colors": ["verde", "rojo"]
     },
     {
       "id": "wario",
@@ -159,76 +157,6 @@
       "short": "TM",
       "sig": ["#8B5A2B", "#fff"],
       "colors": ["marron", "blanco"]
-    },
-    {
-      "id": "mario",
-      "name": "Mario",
-      "short": "M",
-      "sig": ["#E3262E", "#fff"],
-      "colors": ["rojo", "azul"]
-    },
-    {
-      "id": "peach",
-      "name": "Peach",
-      "short": "P",
-      "sig": ["#F77DB5", "#fff"],
-      "colors": ["rosa", "dorado"]
-    },
-    {
-      "id": "pauline",
-      "name": "Pauline",
-      "short": "Pa",
-      "sig": ["#B3122A", "#fff"],
-      "colors": ["rojo", "negro"]
-    },
-    {
-      "id": "birdo",
-      "name": "Birdo",
-      "short": "Bi",
-      "sig": ["#F77DB5", "#fff"],
-      "colors": ["rosa", "rojo"]
-    },
-    {
-      "id": "shyguy",
-      "name": "Shy Guy",
-      "short": "SG",
-      "sig": ["#E3262E", "#fff"],
-      "colors": ["rojo", "blanco"]
-    },
-    {
-      "id": "koopa",
-      "name": "Koopa Troopa",
-      "short": "K",
-      "sig": ["#2EA84A", "#FFD21F"],
-      "colors": ["verde", "amarillo"]
-    },
-    {
-      "id": "bowser",
-      "name": "Bowser",
-      "short": "B",
-      "sig": ["#F7851E", "#15172B"],
-      "colors": ["naranja", "verde"]
-    },
-    {
-      "id": "boo",
-      "name": "Boo",
-      "short": "Bo",
-      "sig": ["#FAFAFA", "#15172B"],
-      "colors": ["blanco", "rosa"]
-    },
-    {
-      "id": "drybones",
-      "name": "Dry Bones",
-      "short": "DB",
-      "sig": ["#9CA3AF", "#15172B"],
-      "colors": ["blanco", "gris"]
-    },
-    {
-      "id": "goomba",
-      "name": "Goomba",
-      "short": "G",
-      "sig": ["#8B5A2B", "#fff"],
-      "colors": ["marron", "beige"]
     }
   ]
 }
