@@ -1,1 +1,1 @@
-﻿Pon aqui una imagen o mini video por personaje, con el id como nombre: mario.png, luigi.jpg, yoshi.mp4, shyguy.webp ... Ids: mario luigi peach daisy rosalina pauline yoshi birdo shyguy toad toadette koopa bowser bowserjr wario waluigi dk boo drybones goomba
+﻿Pon aqui una imagen o mini video por personaje, con el id como nombre: mario.png, luigi.jpg, yoshi.mp4, shyguy.webp ... Ids: mario luigi peach daisy rosalina pauline yoshi birdo shyguy toad toadette koopa bowser bowserjr wario waluigi dk boo drybones goomba pinguino vaca ninji topomonty

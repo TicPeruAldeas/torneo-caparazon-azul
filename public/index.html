@@ -94,7 +94,8 @@
   .char.mine .free { color: var(--ok); font-weight: 700; }
   .char[aria-pressed="true"] { border: 2px solid var(--accent); padding: 7px 7px 9px; box-shadow: 0 4px 0 var(--accent); }
   .media { width: 100%; max-width: 100%; aspect-ratio: 1; border-radius: 8px; overflow: hidden; display: grid; place-items: center; }
-  .media img, .media video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .media:not(.emblem) { background: #FFFFFF; }
+  .media img, .media video { width: 100%; height: 100%; object-fit: contain; display: block; }
   .emblem { font-family: var(--display); font-size: 30px; box-shadow: inset 0 0 0 4px rgba(255,255,255,.3); }
   .owner-tools { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
   .owner-tools button { font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; background: none; border: 1px dashed var(--line); color: var(--muted); border-radius: 6px; padding: 3px 8px; }
