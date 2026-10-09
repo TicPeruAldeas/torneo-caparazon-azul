@@ -163,7 +163,7 @@
       "name": "Shy Guy",
       "short": "SG",
       "sig": ["#E3262E", "#fff"],
-      "colors": ["rojo", "blanco"]
+      "colors": ["negro", "rojo"]
     }
   ]
 }
