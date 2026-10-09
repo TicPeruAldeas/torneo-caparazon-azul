@@ -48,6 +48,16 @@ try {
     save();
     console.log(`Restauradas ${added} de ${restore.picks.length} reservas (${restore.id})`);
   }
+  // Cambios de personaje para quien ya reservó (p. ej. un personaje que se quitó), una vez por id
+  for (const m of restore.moves || []) {
+    if (!m.id || state.restored.includes(m.id) || !CHAR_BY_ID[m.to]) continue;
+    const pick = state.picks.find(p => p.character === m.from);
+    const taken = state.picks.some(p => p.character === m.to && p !== pick);
+    if (pick && !taken) { pick.character = m.to; pick.id = m.to; }
+    state.restored.push(m.id);
+    save();
+    console.log(`Cambio ${m.from} → ${m.to}: ${pick && !taken ? pick.name : "sin cambios"}`);
+  }
 } catch (err) {
   if (err.code !== "ENOENT") console.error("No se pudo restaurar:", err.message);
 }

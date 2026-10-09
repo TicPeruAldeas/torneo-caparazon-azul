@@ -145,13 +145,6 @@
       "colors": ["blanco", "negro"]
     },
     {
-      "id": "ninji",
-      "name": "Ninji",
-      "short": "Ni",
-      "sig": ["#1B1B1F", "#E3262E"],
-      "colors": ["negro", "rojo"]
-    },
-    {
       "id": "topomonty",
       "name": "Topo Monty",
       "short": "TM",
