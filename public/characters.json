@@ -157,6 +157,13 @@
       "short": "TM",
       "sig": ["#8B5A2B", "#fff"],
       "colors": ["marron", "blanco"]
+    },
+    {
+      "id": "shyguy",
+      "name": "Shy Guy",
+      "short": "SG",
+      "sig": ["#E3262E", "#fff"],
+      "colors": ["rojo", "blanco"]
     }
   ]
 }
