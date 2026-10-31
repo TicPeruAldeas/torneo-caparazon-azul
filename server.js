@@ -243,6 +243,7 @@ app.get("/marcador", (req, res) => res.sendFile(path.join(__dirname, "public", "
 app.get("/control", (req, res) => res.sendFile(path.join(__dirname, "public", "control.html")));
 app.get("/resultados", (req, res) => res.sendFile(path.join(__dirname, "public", "resultados.html")));
 app.get("/guia", (req, res) => res.sendFile(path.join(__dirname, "public", "guia.html")));
+app.get("/diagnostico", (req, res) => res.sendFile(path.join(__dirname, "public", "diagnostico.html")));
 
 function removeMediaFile(charId) {
   const old = state.media[charId];

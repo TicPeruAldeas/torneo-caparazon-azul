@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diagnóstico · Torneo Caparazón Azul</title>
+<style>
+  body { margin: 0; padding: 16px; font: 18px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; background: #5C94FC; color: #1B1A2E; }
+  h1 { margin: 0 0 12px; font-size: 26px; color: #fff; }
+  .card { background: #fff; border: 3px solid #1B1A2E; border-radius: 14px; padding: 14px; margin-bottom: 14px; }
+  .row { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px solid #ddd; }
+  .row:last-child { border-bottom: 0; }
+  .ok { color: #23762A; font-weight: 800; }
+  .bad { color: #C81A16; font-weight: 800; }
+  #tap { display: block; width: 100%; font-size: 28px; font-weight: 800; padding: 28px; border-radius: 16px; border: 4px solid #1B1A2E; background: #FBD000; color: #1B1A2E; }
+  #log { font-family: monospace; font-size: 14px; white-space: pre-wrap; word-break: break-all; }
+  #ua { font-family: monospace; font-size: 13px; word-break: break-all; }
+</style>
+</head>
+<body>
+<h1>Diagnóstico de la tablet</h1>
+<div class="card">
+  <button id="tap" type="button">Toca este botón</button>
+  <p id="tapres" style="margin:10px 0 0;font-weight:800">Todavía no se ha registrado ningún toque.</p>
+</div>
+<div class="card" id="checks"></div>
+<div class="card"><b>Navegador</b><div id="ua"></div></div>
+<div class="card"><b>Eventos recibidos</b><div id="log"></div></div>
+<p style="color:#fff;font-weight:700">Toma una captura o foto de esta pantalla después de tocar el botón y envíala.</p>
+<script>
+(function () {
+  var counts = {}, log = document.getElementById("log"), taps = 0;
+  function line(t) { log.textContent = t + "\n" + log.textContent.slice(0, 600); }
+  var evs = ["touchstart", "touchend", "pointerdown", "mousedown", "click"];
+  for (var i = 0; i < evs.length; i++) (function (ev) {
+    window.addEventListener(ev, function () { counts[ev] = (counts[ev] || 0) + 1; line(ev + " #" + counts[ev]); }, true);
+  })(evs[i]);
+  document.getElementById("tap").onclick = function () {
+    taps++;
+    document.getElementById("tapres").textContent = "Toque registrado (" + taps + "). Los toques funcionan.";
+    document.getElementById("tapres").className = "ok";
+  };
+  function test(name, fn) { var r = false; try { r = !!fn(); } catch (e) { r = false; } return [name, r]; }
+  function syntax(code) { try { new Function(code); return true; } catch (e) { return false; } }
+  var checks = [
+    test("JavaScript moderno: ?. (Chrome 80 / Safari 13.1)", function () { return syntax("var a = {}; return a?.b;"); }),
+    test("JavaScript moderno: ||= (Chrome 85 / Safari 14)", function () { return syntax("var a; a ||= 1;"); }),
+    test("Conexión en vivo (EventSource)", function () { return "EventSource" in window; }),
+    test("replaceChildren", function () { return !!Element.prototype.replaceChildren; }),
+    test("Eventos táctiles", function () { return "ontouchstart" in window; }),
+    test("Pointer events", function () { return "PointerEvent" in window; }),
+    test("Pantalla completa", function () { var d = document.documentElement; return !!(d.requestFullscreen || d.webkitRequestFullscreen); }),
+    test("Audio (WebAudio)", function () { return !!(window.AudioContext || window.webkitAudioContext); })
+  ];
+  var html = "";
+  for (var j = 0; j < checks.length; j++) html += '<div class="row"><span>' + checks[j][0] + '</span><span class="' + (checks[j][1] ? "ok" : "bad") + '">' + (checks[j][1] ? "Sí" : "No") + "</span></div>";
+  html += '<div class="row"><span>Pantalla</span><span>' + window.innerWidth + " × " + window.innerHeight + " (escala " + (window.devicePixelRatio || 1) + ")</span></div>";
+  document.getElementById("checks").innerHTML = html;
+  document.getElementById("ua").textContent = navigator.userAgent;
+})();
+</script>
+</body>
+</html>
