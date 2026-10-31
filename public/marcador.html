@@ -273,6 +273,25 @@
   @keyframes fall { to { transform: translateY(1500px); } }
   @keyframes spin { 50% { scale: .25 1; } }
 
+  /* Controles en la misma tablet */
+  #ctl { position: fixed; left: max(16px, env(safe-area-inset-left)); bottom: max(16px, env(safe-area-inset-bottom)); z-index: 5; font: 800 20px var(--cond);
+    padding: 12px 18px; min-height: 52px; border-radius: 14px; border: 3px solid var(--ink); background: var(--red); color: #fff; box-shadow: 0 4px 0 var(--ink); cursor: pointer; transition: opacity .4s; touch-action: manipulation; }
+  #ctl.hide { opacity: 0; pointer-events: none; }
+  #menu { position: fixed; inset: 0; z-index: 7; display: grid; place-items: center; background: rgba(27,26,46,.55); padding: max(12px, env(safe-area-inset-top)) 12px; }
+  #menu .box { width: min(760px, 100%); max-height: 100%; overflow-y: auto; background: #fff; border: 4px solid var(--ink); border-radius: 20px; box-shadow: 0 8px 0 var(--ink); padding: 16px 18px; display: grid; gap: 12px;
+    font-family: var(--cond); color: var(--ink); }
+  #menu .mh { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  #menu h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 30px; }
+  #menu h3 { margin: 4px 0 0; font-size: 16px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  #menu .mrow { display: flex; flex-wrap: wrap; gap: 8px; }
+  #menu button { font: 800 20px var(--cond); min-height: 52px; padding: 8px 16px; border-radius: 12px; border: 3px solid var(--ink); background: #fff; color: var(--ink); box-shadow: 0 3px 0 var(--ink); touch-action: manipulation; cursor: pointer; }
+  #menu button.on { background: var(--yellow); }
+  #menu button.go { background: var(--yellow); }
+  #menu button.warn { background: var(--red); color: #fff; }
+  #menu button:disabled { opacity: .45; }
+  #menu input { font: 700 20px var(--cond); padding: 12px; border: 3px solid var(--ink); border-radius: 12px; background: var(--cream); width: 100%; }
+  #menu .note { font-size: 18px; font-weight: 700; }
+  #menu .err { color: #C81A16; }
   #snd { position: fixed; right: max(16px, env(safe-area-inset-right)); bottom: calc(max(16px, env(safe-area-inset-bottom)) + 64px); z-index: 5; font: 800 18px var(--cond);
     padding: 10px 16px; border-radius: 14px; border: 3px solid var(--ink); background: #fff; color: var(--ink); box-shadow: 0 4px 0 var(--ink); cursor: pointer; transition: opacity .4s; }
   #snd.hide { opacity: 0; pointer-events: none; }
@@ -399,6 +418,8 @@
 </div>
 <button id="fs" type="button">Pantalla completa</button>
 <button id="snd" type="button">Sonido</button>
+<button id="ctl" type="button">Controles</button>
+<div id="menu" hidden></div>
 <div id="toast" role="status" hidden></div>
 <div id="oldbrowser" hidden>Este navegador es muy antiguo para el marcador. Actualiza Chrome o Safari en la tablet, o ábrelo en otro dispositivo.</div>
 
@@ -798,7 +819,7 @@ fsBtn.addEventListener("click", async () => {
   keepAwake();
   setTimeout(fit, 300);
 });
-function onTouch() { showFsButton(); showSnd(); keepAwake(); }
+function onTouch() { showFsButton(); showSnd(); showCtl(); keepAwake(); }
 for (const ev of ["pointerdown", "touchstart", "mousedown", "keydown"]) addEventListener(ev, onTouch, { passive: true });
 for (const ev of ["touchend", "click"]) addEventListener(ev, () => unlockAudio(), { passive: true });
 document.addEventListener("fullscreenchange", () => { fit(); showFsButton(); });
@@ -941,6 +962,76 @@ T.connect((state, chars) => {
   draw(mode !== lastMode);
   lastMode = mode;
 }, ok => { $("live").classList.toggle("off", !ok); $("live").querySelector("span").textContent = ok ? "EN VIVO" : "RECONECTANDO"; });
+// Controles desde la misma tablet: usan la contraseña de organizador y envían el cambio al servidor
+const ctlBtn = $("ctl"), menu = $("menu");
+let ctlPass = null, menuTimer = null, menuConfirm = null;
+try { ctlPass = sessionStorage.getItem("torneo-admin"); } catch (e) {}
+function showCtl() { ctlBtn.classList.remove("hide"); clearTimeout(ctlBtn.t); ctlBtn.t = setTimeout(() => ctlBtn.classList.add("hide"), 8000); }
+ctlBtn.t = setTimeout(() => ctlBtn.classList.add("hide"), 8000);
+function closeMenu() { menu.hidden = true; menuConfirm = null; clearTimeout(menuTimer); }
+function touchMenu() { clearTimeout(menuTimer); menuTimer = setTimeout(closeMenu, 20000); }
+async function send(mut, close = true) {
+  const t = JSON.parse(JSON.stringify(S.tournament));
+  mut(t);
+  try {
+    const res = await fetch("/api/admin/tournament", { method: "PUT", headers: { "Content-Type": "application/json", "x-admin-password": ctlPass }, body: JSON.stringify(t) });
+    if (res.status === 401) { ctlPass = null; try { sessionStorage.removeItem("torneo-admin"); } catch (e) {} renderMenu("La contraseña ya no es válida. Escríbela de nuevo."); return; }
+    if (!res.ok) throw new Error();
+    if (close) closeMenu(); else renderMenu();
+  } catch (e) { toast("No se pudo enviar. Revisa la conexión de la tablet."); }
+}
+function shuffleNumbers(t) {
+  const nums = T.NUMS.slice();
+  for (let i = nums.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const x = nums[i]; nums[i] = nums[j]; nums[j] = x; }
+  t.numbers = {};
+  S.picks.slice(0, 13).forEach((p, k) => { t.numbers[p.id] = nums[k]; });
+}
+function renderMenu(msg) {
+  touchMenu();
+  const b = (label, fn, cls, dis) => { const e = h("button", { type: "button", class: cls || "" }, label); e.disabled = !!dis; e.addEventListener("click", fn); return e; };
+  const box = h("div", { class: "box" });
+  box.append(h("div", { class: "mh" }, h("h2", {}, "Controles"), b("Cerrar ✕", closeMenu)));
+  if (!ctlPass) {
+    const inp = h("input", { type: "password", placeholder: "Contraseña de organizador", autocomplete: "current-password" });
+    const enter = async () => {
+      const res = await fetch("/api/admin/login", { method: "POST", headers: { "x-admin-password": inp.value } });
+      if (res.ok) { ctlPass = inp.value; try { sessionStorage.setItem("torneo-admin", ctlPass); } catch (e) {} renderMenu(); }
+      else renderMenu("Contraseña incorrecta.");
+    };
+    inp.addEventListener("keydown", e => { if (e.key === "Enter") enter(); });
+    box.append(h("p", { class: "note" }, "Escribe la contraseña de organizador para manejar la transmisión desde esta tablet."), inp, h("div", { class: "mrow" }, b("Entrar", enter, "go")));
+    if (msg) box.append(h("p", { class: "note err" }, msg));
+    menu.replaceChildren(box); menu.hidden = false; setTimeout(() => inp.focus(), 50); return;
+  }
+  const t = S.tournament, v = t.view, k = t.slide || 0;
+  const assigned = Object.keys(t.numbers || {}).length;
+  const hasResults = Object.keys(t.mk || {}).length + Object.keys(t.tennis || {}).length + Object.keys(t.smash || {}).length > 0;
+  const doDraw = () => send(x => { shuffleNumbers(x); x.drawStart = true; x.view = "sorteo"; x.countdownSeconds = 0; });
+  box.append(h("h3", {}, "Sorteo en vivo"));
+  if (menuConfirm === "draw") {
+    box.append(h("p", { class: "note err" }, hasResults ? "Ya hay resultados cargados: un sorteo nuevo cambia quién jugó cada partida." : "Se reemplazan los números actuales."),
+      h("div", { class: "mrow" }, b("Sí, sortear", doDraw, "warn"), b("Cancelar", () => { menuConfirm = null; renderMenu(); })));
+  } else {
+    box.append(h("div", { class: "mrow" },
+      b("Sortear en vivo", () => { if (assigned) { menuConfirm = "draw"; renderMenu(); } else doDraw(); }, "go"),
+      b("Repetir animación", () => send(x => { x.drawStart = true; x.view = "sorteo"; }), "", assigned < 13)));
+  }
+  box.append(h("h3", {}, "Reglas"), h("div", { class: "mrow" },
+    b("◀ Anterior", () => send(x => { x.view = "reglas"; x.slide = Math.max(0, k - 1); }, false), "", v !== "reglas" || k === 0),
+    b(v === "reglas" ? `Regla ${k + 1} de ${T.SLIDES.length}` : "Mostrar reglas", () => send(x => { x.view = "reglas"; x.slide = v === "reglas" ? k : 0; }, false), v === "reglas" ? "on" : ""),
+    b("Siguiente ▶", () => send(x => { x.view = "reglas"; x.slide = Math.min(T.SLIDES.length - 1, v === "reglas" ? k + 1 : 0); }, false), "", v === "reglas" && k === T.SLIDES.length - 1)));
+  const views = [["auto", "Automático"], ["general", "Tabla general"], ["partida", "Partida actual"], ["calendario", "Calendario"], ["podio", "Podio"]];
+  box.append(h("h3", {}, "Qué se ve"), h("div", { class: "mrow" }, views.map(([id, l]) => b(l, () => send(x => { x.view = id; }), v === id ? "on" : ""))));
+  const tm = (t.timers || {}).match || {};
+  box.append(h("h3", {}, "Partida"), h("div", { class: "mrow" },
+    b("Cuenta de 2 min", () => send(x => { x.countdownSeconds = 120; })),
+    b(tm.running ? "Pausar cronómetro" : "Iniciar cronómetro", () => send(x => { x.timerCmd = { match: tm.running ? "pause" : "start" }; }))));
+  if (msg) box.append(h("p", { class: "note err" }, msg));
+  menu.replaceChildren(box); menu.hidden = false;
+}
+ctlBtn.addEventListener("click", () => { unlockAudio(); renderMenu(); });
+menu.addEventListener("click", e => { if (e.target === menu) closeMenu(); else touchMenu(); });
+
 window.__marcadorOk = true;
 </script>
 <script>setTimeout(function () { if (!window.__marcadorOk) document.getElementById("oldbrowser").hidden = false; }, 2500);</script>
