@@ -1,0 +1,9 @@
+{
+  "name": "Marcador · Torneo Caparazón Azul",
+  "short_name": "Marcador",
+  "start_url": "/marcador",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#5C94FC",
+  "theme_color": "#E52521"
+}
