@@ -65,7 +65,8 @@
   .rules { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); }
   .rules div { border: 2px solid var(--ink); border-radius: 12px; padding: 10px 12px; background: #fff; border-top: 8px solid var(--c); }
   .rules b { font-family: var(--display); font-weight: 400; font-size: 18px; display: block; margin-bottom: 4px; }
-  .rules span { font-size: 14px; }
+  .rules span { font-size: 14px; line-height: 1.5; }
+  .rules span b.sub { display: inline; font-family: inherit; font-size: inherit; font-weight: 800; margin: 0; }
   footer { text-align: center; color: var(--ink); font-weight: 700; margin-top: 8px; }
 </style>
 </head>
@@ -159,12 +160,20 @@
   </section>
 
   <section class="card">
-    <h2>Puntos, en resumen</h2>
+    <h2>Cómo se suman los puntos</h2>
+    <p>Para explicarlas en la TV: pon <b>Reglas</b> y usa las flechas <b>◀ ▶</b> que aparecen a los lados de la pantalla.</p>
     <div class="rules">
-      <div style="--c:var(--red)"><b>Mario Kart</b><span>25 − posición final. La pareja que suma más gana +3 cada uno (si empatan, no hay bono).</span></div>
-      <div style="--c:var(--green)"><b>Mario Tennis</b><span>1 punto por juego ganado por tu pareja, +3 si ganan el partido.</span></div>
-      <div style="--c:var(--orange)"><b>Smash</b><span>11 jugadores. Campeón 12 · Sub 11 · 3.º 10 · 4.º 9 · cuartos 6,5 · primera ronda 3.</span></div>
-      <div style="--c:var(--blue)"><b>General</b><span>En Kart y Tennis, según tu puesto sumas de 12 (1.º) a 1 (12.º). Gana quien sume más en los 3 juegos.</span></div>
+      <div style="--c:var(--red)"><b>Mario Kart</b><span>
+        <b class="sub">Tu carrera.</b> Mientras mejor llegues, más sumas: 1.º = 24, 2.º = 23, 3.º = 22… (25 menos tu puesto).<br>
+        <b class="sub">Bono +3.</b> En cada carrera hay 2 parejas. Se suman los puntos de los dos de cada pareja; la que tenga más gana +3 para cada uno. Si empatan, nadie gana el bono.<br>
+        <b class="sub">Ejemplo.</b> Ana 3.ª (22) + Beto 10.º (15) = 37. Carla 1.ª (24) + Dani 20.º (5) = 29. Gana la pareja de Ana: Ana 25, Beto 18, Carla 24, Dani 5.</span></div>
+      <div style="--c:var(--green)"><b>Mario Tennis</b><span>
+        <b class="sub">Por juego.</b> Cada juego que gana tu pareja = 1 punto para cada uno.<br>
+        <b class="sub">Ganar.</b> La pareja que gana el partido (primera en llegar a 3 juegos) suma +3 cada uno.<br>
+        <b class="sub">Ejemplo.</b> Ganan 3 a 1: cada ganador suma 6 y cada perdedor 1.</span></div>
+      <div style="--c:var(--orange)"><b>Smash</b><span>Juegan 11, en llaves 1 vs 1 (si pierdes, quedas fuera). Puntos según hasta dónde llegues: Campeón 12 · Subcampeón 11 · 3.º 10 · 4.º 9 · eliminado en cuartos 6,5 · eliminado en primera ronda 3.</span></div>
+      <div style="--c:var(--blue)"><b>Total de la tarde</b><span>Con tus 4 partidas de Kart se arma una tabla, y lo mismo con Tennis. Según tu puesto en cada tabla sumas de 12 (1.º) a 1 (12.º). Esos puntos + los de Smash = tu total. Gana el total más alto.</span></div>
+      <div style="--c:var(--purple, #6B3FA0)"><b>Parejas</b><span>Juegas 4 partidas con 4 compañeros distintos (no con todos: son 11). El sorteo decide con quién; nadie elige. En Kart casi todo es individual (el compañero solo da el bono de +3); en Tennis el compañero pesa más.</span></div>
     </div>
   </section>
 

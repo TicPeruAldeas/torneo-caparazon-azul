@@ -277,6 +277,11 @@
   #ctl { position: fixed; left: max(16px, env(safe-area-inset-left)); bottom: max(16px, env(safe-area-inset-bottom)); z-index: 5; font: 800 20px var(--cond);
     padding: 12px 18px; min-height: 52px; border-radius: 14px; border: 3px solid var(--ink); background: var(--red); color: #fff; box-shadow: 0 4px 0 var(--ink); cursor: pointer; transition: opacity .4s; touch-action: manipulation; }
   #ctl.hide { opacity: 0; pointer-events: none; }
+  .rnav { position: fixed; top: 50%; z-index: 5; width: 64px; height: 64px; margin-top: -32px; border-radius: 50%; border: 3px solid var(--ink); background: var(--yellow); color: var(--ink);
+    font: 400 30px var(--display); box-shadow: 0 4px 0 var(--ink); display: grid; place-items: center; cursor: pointer; touch-action: manipulation; opacity: .9; }
+  .rnav:disabled { opacity: .3; }
+  #rprev { left: max(10px, env(safe-area-inset-left)); }
+  #rnext { right: max(10px, env(safe-area-inset-right)); }
   #menu { position: fixed; inset: 0; z-index: 7; display: grid; place-items: center; background: rgba(27,26,46,.55); padding: max(12px, env(safe-area-inset-top)) 12px; }
   #menu .box { width: min(760px, 100%); max-height: 100%; overflow-y: auto; background: #fff; border: 4px solid var(--ink); border-radius: 20px; box-shadow: 0 8px 0 var(--ink); padding: 16px 18px; display: grid; gap: 12px;
     font-family: var(--cond); color: var(--ink); }
@@ -334,7 +339,7 @@
   #stage[data-theme="smash"] .ticker { background: linear-gradient(90deg, #D9480F, #F08A1C 50%, #D9480F); }
 
   /* Reglas, una pantalla a la vez */
-  .slide { flex: 1; display: flex; flex-direction: column; gap: 22px; background: var(--card); border: 4px solid var(--ink); border-radius: 28px; box-shadow: 0 8px 0 var(--ink); padding: 36px 48px; min-height: 0; }
+  .slide { flex: 1; display: flex; flex-direction: column; gap: 22px; background: var(--card); border: 4px solid var(--ink); border-radius: 28px; box-shadow: 0 8px 0 var(--ink); padding: 36px 120px; min-height: 0; }
   .slide h3 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 68px; line-height: 1; }
   .slide .lead { margin: 0; font-size: 36px; font-weight: 700; color: var(--muted); }
   .slide ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 18px; }
@@ -440,6 +445,8 @@
 <button id="fs" type="button">Pantalla completa</button>
 <button id="snd" type="button">Sonido</button>
 <button id="ctl" type="button">Controles</button>
+<button id="rprev" class="rnav" type="button" aria-label="Regla anterior" hidden>◀</button>
+<button id="rnext" class="rnav" type="button" aria-label="Regla siguiente" hidden>▶</button>
 <div id="menu" hidden></div>
 <div id="toast" role="status" hidden></div>
 <div id="oldbrowser" hidden>Este navegador es muy antiguo para el marcador. Actualiza Chrome o Safari en la tablet, o ábrelo en otro dispositivo.</div>
@@ -606,7 +613,7 @@ function viewMatch() {
   const nx = T.SCHEDULE[i + 1];
   return h("section", { class: "view" },
     h("div", { class: "vhead" }, h("span", { class: "tag", style: `--g:var(--${g})` }, T.GAME_SHORT[g]), h("h2", {}, `Partida ${i + 1} de ${T.MATCHES}`),
-      h("p", {}, g === "mk" ? "150cc · mismos objetos y CPU en todas las partidas" : "Sets a 3 juegos · misma cancha y reglas")),
+      h("p", {}, g === "mk" ? "Tus puntos = 25 − tu puesto · +3 a la pareja que sume más" : "1 punto por juego ganado · +3 a la pareja ganadora")),
     h("div", { class: "match" }, pair("A", A), mid, pair("B", B)),
     nx ? h("div", { class: "next" }, "Siguiente: ", h("b", {}, `Partida ${i + 2} · ${pairNames(nx[0])} vs ${pairNames(nx[1])}`)) : h("div", { class: "next" }, "Última partida de este juego"));
 }
@@ -816,6 +823,9 @@ function draw(force) {
   // Vista
   const view = currentView();
   const g = S.tournament.current.game;
+  const sk = S.tournament.slide || 0;
+  $("rprev").hidden = $("rnext").hidden = view !== "reglas";
+  $("rprev").disabled = sk === 0; $("rnext").disabled = sk >= T.SLIDES.length - 1;
   $("stage").dataset.theme = ["mk", "tennis", "smash"].includes(view) ? view : ["partida", "calendario", "cuenta"].includes(view) ? g
     : view === "reglas" ? (T.SLIDES[S.tournament.slide || 0]?.theme || "mario") : "mario";
   const main = $("main");
@@ -1023,6 +1033,7 @@ async function send(mut, close = true) {
     const res = await fetch("/api/admin/tournament", { method: "PUT", headers: { "Content-Type": "application/json", "x-admin-password": ctlPass }, body: JSON.stringify(t) });
     if (res.status === 401) { ctlPass = null; try { sessionStorage.removeItem("torneo-admin"); } catch (e) {} renderMenu("La contraseña ya no es válida. Escríbela de nuevo."); return; }
     if (!res.ok) throw new Error();
+    if (close === "keep") return;
     if (close) closeMenu(); else renderMenu();
   } catch (e) { toast("No se pudo enviar. Revisa la conexión de la tablet."); }
 }
@@ -1076,6 +1087,14 @@ function renderMenu(msg) {
   menu.replaceChildren(box); menu.hidden = false;
 }
 ctlBtn.addEventListener("click", () => { unlockAudio(); renderMenu(); });
+// Flechas de reglas: cambian la pantalla para todos (pide la contraseña la primera vez)
+function stepSlide(d) {
+  if (!ctlPass) { renderMenu(); return; }
+  const k = Math.max(0, Math.min(T.SLIDES.length - 1, (S.tournament.slide || 0) + d));
+  send(x => { x.view = "reglas"; x.slide = k; }, "keep");
+}
+$("rprev").addEventListener("click", () => stepSlide(-1));
+$("rnext").addEventListener("click", () => stepSlide(1));
 menu.addEventListener("click", e => { if (e.target === menu) closeMenu(); else touchMenu(); });
 
 window.__marcadorOk = true;

@@ -188,30 +188,26 @@
   // Presentación de reglas: una pantalla a la vez
   const SLIDES = [
     { theme: "mario", tag: "Bienvenida", title: "Torneo general de la tarde", lead: "12 jugadores · 3 juegos · gana quien sume más puntos generales",
-      games: [["mk", "Mario Kart World", "Supervivencia en parejas rotativas"], ["tennis", "Mario Tennis", "Dobles en parejas rotativas"], ["smash", "Super Smash Bros. Ultimate", "Torneo 1 vs 1"]] },
-    { theme: "mario", tag: "Puntos generales", title: "Así se suman los puntos", lead: "En cada juego se arma un ranking. Según tu puesto, sumas:",
-      table: true, foot: "Si dos o más jugadores empatan en un puesto, se reparten los puntos de esos puestos (ej.: empate en 3.º y 4.º = 9,5 cada uno)." },
-    { theme: "mario", tag: "Parejas", title: "Calendario de parejas rotativas", lead: "Se usa en Mario Kart y en Mario Tennis",
-      items: ["Cada jugador tiene un número del 1 al 12, por sorteo.", "Cada uno juega 4 partidas.", "Nunca repites compañero.", "Nunca juegas dos partidas seguidas."] },
-    { theme: "mk", tag: "Juego 1", title: "Mario Kart World · Supervivencia", sections: [
-      ["Configuración", "150cc, la misma dificultad de CPU y los mismos objetos en todas las partidas."],
-      ["Puntos", "Cada jugador suma 25 − su posición final (1.º = 24, 10.º = 15, 24.º = 1). La pareja que sume más en la partida gana +3 para cada integrante."],
-      ["Ranking", "Suma de tus 4 partidas."],
-      ["Desempate", "Más primeros puestos; si siguen empatados, partida extra."],
-      ["Duración", "1 h 45 min a 2 h."]] },
-    { theme: "tennis", tag: "Juego 2", title: "Mario Tennis · Dobles", sections: [
-      ["Configuración", "Sets a 3 juegos, la misma cancha y las mismas reglas en todos los partidos."],
-      ["Puntos", "1 punto por cada juego que gane tu pareja, y +3 a cada integrante de la pareja ganadora. En un 3-1: cada ganador suma 6 y cada perdedor 1."],
-      ["Ranking", "Suma de tus 4 partidos."],
-      ["Desempate", "Más partidos ganados; si siguen empatados, tie-break directo."],
-      ["Duración", "1 h 30 min a 1 h 40 min."]] },
-    { theme: "smash", tag: "Juego 3", title: "Super Smash Bros. Ultimate", sections: [
-      ["Formato", "Eliminación directa 1 vs 1, individual, con 11 jugadores. El juego arma el cuadro al azar (5 jugadores pasan directo a cuartos)."],
-      ["Configuración", "3 vidas, 7 minutos, sin objetos, escenario fijo (Campo de Batalla o Destino Final). Final al mejor de 3."],
-      ["Puntos generales", "Campeón 12 · Subcampeón 11 · 3.º lugar 10 · 4.º lugar 9 · eliminados en cuartos 6,5 · eliminados en primera ronda 3."],
-      ["Duración", "50 a 60 minutos."]] },
+      games: [["mk", "Mario Kart World", "En parejas que cambian cada partida"], ["tennis", "Mario Tennis", "Dobles, en parejas que cambian"], ["smash", "Super Smash Bros. Ultimate", "1 vs 1, eliminación directa"]] },
+    { theme: "mario", tag: "Parejas", title: "Parejas que cambian", lead: "En Mario Kart y en Mario Tennis",
+      items: ["Un sorteo te da un número del 1 al 12.", "Con ese número juegas 4 partidas, cada una con un compañero distinto.", "Tus 4 compañeros y tus rivales salen del sorteo: nadie los elige.", "Nunca juegas dos partidas seguidas."] },
+    { theme: "mk", tag: "Juego 1", title: "Mario Kart · tus puntos", sections: [
+      ["Tu carrera", "Mientras mejor llegues, más sumas: 1.º = 24 pts, 2.º = 23, 3.º = 22… (25 menos tu puesto)."],
+      ["Bono +3", "Se suman los puntos de los dos de cada pareja. La pareja con más puntos gana +3 extra para cada uno. Si empatan, nadie gana el bono."],
+      ["Ejemplo", "Ana llega 3.ª (22) y Beto 10.º (15): 37. Carla llega 1.ª (24) y Dani 20.º (5): 29. Ana y Beto ganan el bono: Ana 25, Beto 18, Carla 24, Dani 5."],
+      ["Al final", "Se suman tus 4 carreras. Empate: gana quien tenga más primeros puestos."]] },
+    { theme: "tennis", tag: "Juego 2", title: "Mario Tennis · tus puntos", sections: [
+      ["Por juego", "Cada juego que gana tu pareja = 1 punto para ti y para tu compañero."],
+      ["Ganar", "La pareja que gana el partido (la primera en llegar a 3 juegos) suma +3 cada uno."],
+      ["Ejemplo", "Si ganan 3 a 1: cada ganador suma 3 + 3 = 6 y cada perdedor suma 1."],
+      ["Al final", "Se suman tus 4 partidos. Empate: gana quien tenga más partidos ganados."]] },
+    { theme: "smash", tag: "Juego 3", title: "Smash Bros. · tus puntos", sections: [
+      ["Formato", "Todos contra todos en llaves 1 vs 1: si pierdes, quedas eliminado. Juegan 11."],
+      ["Puntos", "Según hasta dónde llegues: Campeón 12 · Subcampeón 11 · 3.º 10 · 4.º 9 · eliminado en cuartos 6,5 · eliminado en primera ronda 3."]] },
+    { theme: "mario", tag: "Puntos generales", title: "¿Cómo se gana la tarde?", lead: "En Mario Kart y Mario Tennis se arma una tabla. Según tu puesto en cada tabla, sumas:",
+      table: true, foot: "Esos puntos + los de Smash = tu total. Gana quien tenga el total más alto. Si dos empatan en un puesto, se reparten esos puntos." },
     { theme: "mario", tag: "Importante", title: "Antes de empezar",
-      items: ["Anotar los resultados apenas termine cada partida.", "Las reglas no se cambian a mitad de un juego.", "Gana la tarde quien sume más puntos generales en los 3 juegos."] }
+      items: ["Los resultados se anotan apenas termina cada partida.", "Las reglas no cambian a mitad de un juego.", "Gana la tarde quien sume más puntos en los 3 juegos."] }
   ];
 
   // Sorteo en vivo: presentación y luego un número cada STEP ms (ruleta SPIN ms y revelación)
