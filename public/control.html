@@ -121,6 +121,8 @@
   .clockval { font-family: var(--display); font-size: 40px; line-height: 1; font-variant-numeric: tabular-nums; }
   .clockval small { display: block; font-family: var(--cond); font-size: 14px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
   .clockval.on { color: var(--green-dk); }
+  .chk { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-weight: 800; }
+  .chk input { width: 22px; height: 22px; accent-color: var(--red); }
   .copied { font-size: 13px; font-weight: 800; color: var(--ok); }
   textarea.share { width: 100%; min-height: 160px; font: 13px/1.4 ui-monospace, Consolas, monospace; border: 2px solid var(--ink); border-radius: 10px; padding: 8px; }
 </style>
@@ -230,8 +232,8 @@ function opts(sel, values, labelFn) {
 
 /* ---------- Rápido: la partida en pantalla, siguiente y cuenta regresiva ---------- */
 function nextPending(g, from) {
-  for (let k = from + 1; k < 13; k++) if (!T.matchDone(W, g, k)) return k;
-  return Math.min(from + 1, 12);
+  for (let k = from + 1; k < T.MATCHES; k++) if (!T.matchDone(W, g, k)) return k;
+  return Math.min(from + 1, T.MATCHES - 1);
 }
 function tabQuick() {
   const g = W.current.game, i = W.current.match;
@@ -323,7 +325,7 @@ function resetCard() {
   }); confirmReset = false; resetNumbers = false; setStatus("Torneo reiniciado · puedes usar Deshacer si fue un error", "ok"); };
   return h("div", { class: "card" },
     h("h2", {}, "Reiniciar torneo"),
-    h("p", { class: "lead" }, "Para borrar las pruebas: deja en cero Mario Kart, Tennis, Smash, desempates y la cuenta regresiva, y vuelve a la partida 1. Los 13 jugadores y sus personajes no se tocan."),
+    h("p", { class: "lead" }, "Para borrar las pruebas: deja en cero Mario Kart, Tennis, Smash, desempates y la cuenta regresiva, y vuelve a la partida 1. Los jugadores y sus personajes no se tocan."),
     confirmReset
       ? h("div", { class: "grid", style: "gap:10px" },
           h("label", { class: "confirm", style: "font-weight:700" },
@@ -356,7 +358,7 @@ function randomNumbers(w) {
   const nums = T.NUMS.slice();
   for (let i = nums.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [nums[i], nums[j]] = [nums[j], nums[i]]; }
   w.numbers = {};
-  S.picks.slice(0, 13).forEach((p, k) => { w.numbers[p.id] = nums[k]; });
+  S.picks.slice(0, T.PLAYERS).forEach((p, k) => { w.numbers[p.id] = nums[k]; });
 }
 function tabShow() {
   const hasResults = Object.keys(W.mk).length + Object.keys(W.tennis).length + Object.keys(W.smash).length > 0;
@@ -368,13 +370,13 @@ function tabShow() {
   return h("div", { class: "grid cols-2" },
     h("div", { class: "card" },
       h("h2", {}, "Sorteo en vivo"),
-      h("p", { class: "lead" }, "La TV anuncia el sorteo y revela los números del 1 al 13 uno por uno, con una ruleta de personajes. Dura unos 40 segundos."),
+      h("p", { class: "lead" }, "La TV anuncia el sorteo y revela los números del 1 al 12 uno por uno, con una ruleta de personajes. Dura unos 40 segundos."),
       confirmLiveDraw
         ? h("div", { class: "confirm" }, h("span", { class: "warn" }, hasResults ? "Ya hay resultados cargados: un sorteo nuevo cambia quién jugó cada partida." : "Se reemplazan los números actuales."),
             h("button", { class: "btn warn", onclick: liveDraw }, "Sí, sortear en la TV"), h("button", { class: "btn", onclick: () => { confirmLiveDraw = false; render(); } }, "Cancelar"))
         : h("div", { class: "seg" },
             h("button", { "aria-pressed": "true", onclick: () => { if (assigned) { confirmLiveDraw = true; render(); } else liveDraw(); } }, "Sortear en vivo en la TV"),
-            h("button", { disabled: assigned < 13, onclick: replay }, "Repetir la animación (mismos números)")),
+            h("button", { disabled: assigned < T.PLAYERS, onclick: replay }, "Repetir la animación (mismos números)")),
       h("div", { class: "label" }, "Números actuales"),
       h("div", { class: "summary" }, T.NUMS.map(n => h("span", {}, `#${n} ${player(n).name}`)))),
     h("div", { class: "card" },
@@ -411,7 +413,7 @@ function tabTx() {
     h("div", { class: "card" },
       h("div", { class: "label" }, "Avance"),
       h("div", { class: "summary" },
-        h("span", {}, `Mario Kart ${C.progress.mk}/13`), h("span", {}, `Tennis ${C.progress.tennis}/13`), h("span", {}, `Smash ${C.progress.smash}/13`)),
+        h("span", {}, `Mario Kart ${C.progress.mk}/${T.MATCHES}`), h("span", {}, `Tennis ${C.progress.tennis}/${T.MATCHES}`), h("span", {}, `Smash ${C.progress.smash}/${C.progress.smashTotal}`)),
       h("div", { class: "label" }, "Clasificación general"),
       h("div", { class: "tablewrap" }, h("table", {},
         h("thead", {}, h("tr", {}, h("th", {}, "Pos"), h("th", {}, "Jugador"), h("th", {}, "Kart"), h("th", {}, "Tennis"), h("th", {}, "Smash"), h("th", {}, "Total"))),
@@ -439,23 +441,35 @@ function tabPlayers() {
     const nums = T.NUMS.slice();
     for (let i = nums.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [nums[i], nums[j]] = [nums[j], nums[i]]; }
     w.numbers = {};
-    S.picks.slice(0, 13).forEach((p, k) => { w.numbers[p.id] = nums[k]; });
+    S.picks.slice(0, T.PLAYERS).forEach((p, k) => { w.numbers[p.id] = nums[k]; });
     confirmDraw = false;
   });
   const hasResults = Object.keys(W.mk).length + Object.keys(W.tennis).length + Object.keys(W.smash).length > 0;
   return h("div", { class: "grid" },
     h("div", { class: "card" },
       h("h2", {}, "Números del sorteo"),
-      h("p", { class: "lead" }, `Cada jugador tiene un número del 1 al 13; con ese número entra en el calendario de parejas. Asignados: ${assigned}/13. Si eliges un número que ya tiene otro jugador, se intercambian.`),
+      h("p", { class: "lead" }, `Cada jugador tiene un número del 1 al ${T.PLAYERS}; con ese número entra en el calendario de parejas. Asignados: ${assigned}/${T.PLAYERS}. Si eliges un número que ya tiene otro jugador, se intercambian. Desmarca «Juega Smash» para quien solo juega Kart y Tennis.`),
       confirmDraw
         ? h("div", { class: "confirm" }, h("span", { class: "warn" }, hasResults ? "Ya hay resultados cargados: un sorteo nuevo cambia quién jugó cada partida." : "Se reemplazan los números actuales."),
             h("button", { class: "btn warn", onclick: draw }, "Sí, sortear de nuevo"), h("button", { class: "btn", onclick: () => { confirmDraw = false; render(); } }, "Cancelar"))
         : h("button", { class: "btn primary", onclick: () => { if (assigned) { confirmDraw = true; render(); } else draw(); } }, "Sortear números al azar")),
     h("div", { class: "grid cols-3" }, picks.map(p => h("div", { class: "card" }, plRowPick(p,
-      h("select", { "aria-label": `Número de ${p.name}`, onchange: e => setNum(p.id, +e.target.value || null) }, opts(W.numbers[p.id] || "", ["", ...T.NUMS], v => v === "" ? "—" : "#" + v)))))),
+      h("select", { "aria-label": `Número de ${p.name}`, onchange: e => setNum(p.id, +e.target.value || null) }, opts(W.numbers[p.id] || "", ["", ...T.NUMS], v => v === "" ? "—" : "#" + v))),
+      smashToggle(p)))),
     h("div", { class: "card" }, h("h2", {}, "Calendario de parejas"),
       h("div", { class: "tablewrap" }, h("table", {}, h("tbody", {}, T.SCHEDULE.map(([A, B], k) => h("tr", {},
         h("td", {}, `Partida ${k + 1}`), h("td", {}, `(${A.join("-")}) ${pairNames(A)}`), h("td", {}, "vs"), h("td", {}, `(${B.join("-")}) ${pairNames(B)}`))))))));
+}
+function smashToggle(p) {
+  const off = (W.smashOut || []).includes(p.id);
+  const box = h("input", { type: "checkbox", "aria-label": `${p.name} juega Smash` });
+  box.checked = !off;
+  box.addEventListener("change", () => change(w => {
+    const list = (w.smashOut || []).filter(id => id !== p.id);
+    if (!box.checked) { list.push(p.id); const n = w.numbers[p.id]; if (n) delete w.smash[n]; }
+    w.smashOut = list;
+  }));
+  return h("label", { class: "chk" }, box, " Juega Smash");
 }
 function plRowPick(p, extra) {
   const c = CH.charById[p.character];
@@ -548,7 +562,7 @@ function tabSmash() {
       const c = counts[k] || 0;
       return h("span", { class: c === s.slots ? "ok" : c > s.slots ? "bad" : "" }, `${s.label}: ${c}/${s.slots}`);
     })),
-    h("div", { class: "grid cols-3" }, T.NUMS.map(n => h("div", { class: "card" }, plRow(n,
+    h("div", { class: "grid cols-3" }, T.NUMS.map(n => h("div", { class: "card" }, plRow(n, player(n).noSmash ? h("span", { class: "chip" }, "No juega Smash") :
       h("select", { "aria-label": `Etapa de ${player(n).name}`, onchange: e => change(w => { if (e.target.value) w.smash[n] = e.target.value; else delete w.smash[n]; }) },
         opts(W.smash[n] || "", ["", ...Object.keys(T.SMASH)], v => v === "" ? "Sin resultado" : `${T.SMASH[v].label} (${T.fmt(T.SMASH[v].pts)})`)))))));
 }

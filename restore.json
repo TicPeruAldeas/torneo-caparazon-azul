@@ -42,5 +42,16 @@
       "id": "reinicio-2026-10-31",
       "keepNumbers": true
     }
+  ],
+  "edits": [
+    {
+      "id": "plantel-12-2026-10-31",
+      "remove": [
+        "pinguino"
+      ],
+      "smashOut": [
+        "dk"
+      ]
+    }
   ]
 }

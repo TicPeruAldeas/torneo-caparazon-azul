@@ -160,7 +160,7 @@ function renderMe() {
   if (!n) { box.append(h("p", { class: "note" }, "Elige tu nombre para ver tu puesto y tu próxima partida.")); return; }
   const p = P[n], started = C.progress.mk + C.progress.tennis + C.progress.smash > 0;
   box.append(h("div", { class: "me" }, av(p),
-    h("div", {}, h("b", {}, p.name), h("small", {}, `#${n} · ${charName(p)} · Kart ${T.fmt(C.mk[n].gp)} · Tennis ${T.fmt(C.tennis[n].gp)} · Smash ${T.fmt(C.smash[n].gp)}`)),
+    h("div", {}, h("b", {}, p.name), h("small", {}, `#${n} · ${charName(p)} · Kart ${T.fmt(C.mk[n].gp)} · Tennis ${T.fmt(C.tennis[n].gp)} · Smash ${C.smash[n].out ? "no juega" : T.fmt(C.smash[n].gp)}`)),
     h("div", { class: "badge" }, started ? C.generalRank[n] + "º" : "–", h("small", {}, `${T.fmt(C.total[n])} pts`))));
   const nx = T.nextMatchFor(S.tournament, n);
   if (nx) {
@@ -169,6 +169,8 @@ function renderMe() {
       h("span", { class: "t" }, head),
       h("span", {}, `${T.GAME_NAMES[nx.game]} · Partida ${nx.match + 1}`),
       h("div", { class: "vs" }, h("span", {}, `Tú y ${P[nx.partner].name}`), h("em", {}, "VS"), h("span", {}, names(nx.rivals)))));
+  } else if (C.smash[n].out) {
+    box.append(h("p", { class: "note" }, "Ya jugaste todas tus partidas: no juegas Smash."));
   } else if (C.smash[n].stage) {
     box.append(h("p", { class: "note" }, `Smash: ${T.SMASH[C.smash[n].stage].label}.`));
   } else {
@@ -192,7 +194,7 @@ function renderView() {
       `${charName(P[n])} · K ${T.fmt(C.mk[n].gp)} · T ${T.fmt(C.tennis[n].gp)} · S ${T.fmt(C.smash[n].gp)}`)));
   } else if (view === "mk" || view === "tennis") {
     const st = C[view], order = view === "mk" ? C.mkOrder : C.tennisOrder, done = C.progress[view];
-    box.append(h("p", { class: "note" }, `${T.GAME_NAMES[view]} · ${done}/13 partidas`));
+    box.append(h("p", { class: "note" }, `${T.GAME_NAMES[view]} · ${done}/${T.MATCHES} partidas`));
     order.forEach(n => box.append(rowFor(n, done ? st[n].rank : null, T.fmt(st[n].gp), `${st[n].pts} pts juego`,
       `${st[n].played}/4 jugadas · ${view === "mk" ? st[n].firsts + " primeros" : st[n].wins + " victorias"}`)));
   } else if (view === "smash") {

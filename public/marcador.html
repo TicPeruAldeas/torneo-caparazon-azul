@@ -197,7 +197,7 @@
   #fs:focus-visible { outline: 4px solid #fff; outline-offset: 2px; }
 
   /* Calendario de parejas */
-  .cal { flex: 1; display: grid; grid-template-columns: 1fr 1fr; grid-auto-flow: column; grid-template-rows: repeat(7, minmax(0, 1fr)); gap: 12px 22px; }
+  .cal { flex: 1; display: grid; grid-template-columns: 1fr 1fr; grid-auto-flow: column; grid-template-rows: repeat(6, minmax(0, 1fr)); gap: 12px 22px; }
   .cm { display: grid; grid-template-columns: 64px minmax(0, 1fr) 52px minmax(0, 1fr) 132px; align-items: center; gap: 12px; padding: 6px 12px 6px 8px;
     background: var(--card); border: 3px solid var(--ink); border-radius: 14px; box-shadow: 0 4px 0 var(--ink); min-height: 0; }
   .cm.now { background: linear-gradient(180deg, #FFE45C, var(--yellow)); box-shadow: 0 4px 0 var(--ink), 0 0 0 4px #fff; }
@@ -345,7 +345,7 @@
   .sec { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 22px; align-items: start; }
   .sec b { font-family: var(--display); font-weight: 400; font-size: 30px; color: #fff; background: var(--sc, var(--red)); border: 3px solid var(--ink); border-radius: 12px; padding: 4px 14px; text-align: center; -webkit-text-stroke: 1px var(--ink); paint-order: stroke fill; }
   .sec span { font-size: 34px; font-weight: 600; line-height: 1.25; }
-  .ptable { display: grid; grid-template-columns: repeat(7, 1fr); gap: 14px; }
+  .ptable { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; }
   .ptable div { display: grid; justify-items: center; gap: 4px; border: 3px solid var(--ink); border-radius: 16px; padding: 12px 0; background: var(--cream); box-shadow: 0 4px 0 var(--ink); }
   .ptable div:first-child { background: linear-gradient(180deg, #FFE45C, var(--yellow)); }
   .ptable b { font-family: var(--display); font-weight: 400; font-size: 30px; }
@@ -371,7 +371,7 @@
   .spin .nm { font-size: 42px; font-weight: 800; line-height: 1; min-height: 42px; }
   .spin .ch { font-size: 22px; font-weight: 800; color: #5A4300; min-height: 24px; }
   .spin .msg { font-family: var(--display); font-size: 50px; line-height: 1.05; }
-  .dlist { display: grid; grid-template-columns: 1fr 1fr; grid-auto-flow: column; grid-template-rows: repeat(7, minmax(0, 1fr)); gap: 6px 8px; min-height: 0; }
+  .dlist { display: grid; grid-template-columns: 1fr 1fr; grid-auto-flow: column; grid-template-rows: repeat(6, minmax(0, 1fr)); gap: 6px 8px; min-height: 0; }
   .dslot { display: grid; grid-template-columns: 38px 32px minmax(0, 1fr); gap: 6px; align-items: center; background: rgba(255,255,255,.55); border: 2px dashed var(--ink); border-radius: 10px; padding: 2px 8px 2px 4px; min-height: 0; transition: background .3s; }
   .dslot .dn { justify-self: center; width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; font-family: var(--display); font-size: 17px; color: #fff; background: var(--blue); border: 2px solid var(--ink); }
   .dslot .av { width: 32px; height: 32px; border-radius: 7px; font-size: 11px; }
@@ -381,7 +381,7 @@
   .dslot.on { background: #fff; border-style: solid; }
   .dslot.now { background: var(--yellow); }
 
-  .dcal { display: grid; grid-template-columns: 1fr 1fr; grid-auto-flow: column; grid-template-rows: repeat(7, minmax(0, 1fr)); gap: 10px 18px; min-height: 0; }
+  .dcal { display: grid; grid-template-columns: 1fr 1fr; grid-auto-flow: column; grid-template-rows: repeat(6, minmax(0, 1fr)); gap: 10px 18px; min-height: 0; }
   .dcm { display: grid; grid-template-columns: 54px minmax(0, 1fr) 40px minmax(0, 1fr); align-items: center; gap: 8px; padding: 4px 10px 4px 6px;
     background: rgba(255,255,255,.88); border: 3px solid var(--ink); border-radius: 14px; box-shadow: 0 4px 0 var(--ink); min-height: 0; transition: background .4s; }
   .dcm.full { background: #E6F6E7; }
@@ -470,7 +470,7 @@ function fit() {
   st.style.transform = `scale(${vw / W})`;
   // Filas más altas cuando la pantalla es más alta que 16:9 (tablets 16:10 o 4:3)
   const avail = H - 168 - 96 - 96;
-  const pitch = Math.max(56, Math.min(96, Math.floor(avail / 13)));
+  const pitch = Math.max(56, Math.min(96, Math.floor(avail / T.PLAYERS)));
   ROW_H = pitch - ROW_GAP;
   const k = Math.max(1, Math.min(1.5, ROW_H / 48));
   st.style.setProperty("--rh", ROW_H + "px");
@@ -523,7 +523,7 @@ function viewGeneral() {
   const started = C.progress.mk + C.progress.tennis + C.progress.smash > 0;
   const v = h("section", { class: "view" },
     h("div", { class: "vhead" }, h("h2", {}, "Clasificación general"),
-      h("p", {}, started ? "Gana la tarde quien sume más puntos en los 3 juegos" : "13 jugadores · 3 juegos · todo por definirse")),
+      h("p", {}, started ? "Gana la tarde quien sume más puntos en los 3 juegos" : "12 jugadores · 3 juegos · todo por definirse")),
     h("div", { class: "colhead general" }, h("span", {}, "Pos"), h("span"), h("span", { style: "text-align:left" }, "Jugador"),
       h("span", { class: "chip", style: "--c:var(--mk)" }, "Kart"), h("span", { class: "chip", style: "--c:var(--tennis)" }, "Tennis"), h("span", { class: "chip", style: "--c:var(--smash)" }, "Smash"), h("span", {}, "Total")));
   v.append(board("general", order, (n, i) => {
@@ -546,7 +546,7 @@ function viewGame(g) {
   const st = C[g], order = g === "mk" ? C.mkOrder : C.tennisOrder, done = C.progress[g];
   const color = `var(--${g})`;
   const v = h("section", { class: "view" },
-    h("div", { class: "vhead" }, h("span", { class: "tag", style: `--g:${color}` }, `${done}/13`), h("h2", {}, T.GAME_NAMES[g]),
+    h("div", { class: "vhead" }, h("span", { class: "tag", style: `--g:${color}` }, `${done}/${T.MATCHES}`), h("h2", {}, T.GAME_NAMES[g]),
       h("p", {}, g === "mk" ? "Supervivencia · 25 − posición · +3 a la mejor pareja" : "Dobles · 1 punto por juego · +3 al ganar")),
     h("div", { class: "colhead game" }, h("span", {}, "Pos"), h("span"), h("span", { style: "text-align:left" }, "Jugador"),
       h("span", {}, "Jugadas"), h("span", {}, g === "mk" ? "1.º puestos" : "Victorias"), h("span", {}, "Puntos"), h("span", {}, "Pts. generales")));
@@ -576,8 +576,8 @@ function viewSmash() {
         : h("div", { class: "empty-slot" }, "Por definirse")));
   };
   return h("section", { class: "view" },
-    h("div", { class: "vhead" }, h("span", { class: "tag", style: "--g:var(--smash)" }, `${C.progress.smash}/13`), h("h2", {}, "Super Smash Bros. Ultimate"),
-      h("p", {}, "Eliminación directa 1 vs 1 · 3 vidas · 7 minutos · final al mejor de 3")),
+    h("div", { class: "vhead" }, h("span", { class: "tag", style: "--g:var(--smash)" }, `${C.progress.smash}/${C.progress.smashTotal}`), h("h2", {}, "Super Smash Bros. Ultimate"),
+      h("p", {}, "Eliminación directa 1 vs 1 · 3 vidas · 7 minutos · final al mejor de 3" + smashOutNote())),
     h("div", { class: "tiers" },
       h("div", { class: "tcol" }, tier("campeon", "champ")),
       h("div", { class: "tcol" }, tier("sub"), tier("tercero"), tier("cuarto")),
@@ -605,7 +605,7 @@ function viewMatch() {
   mid.append(h("div", { class: "mclock", id: "mclock", hidden: true }, h("small", {}, "Tiempo"), h("span", {}, "00:00")));
   const nx = T.SCHEDULE[i + 1];
   return h("section", { class: "view" },
-    h("div", { class: "vhead" }, h("span", { class: "tag", style: `--g:var(--${g})` }, T.GAME_SHORT[g]), h("h2", {}, `Partida ${i + 1} de 13`),
+    h("div", { class: "vhead" }, h("span", { class: "tag", style: `--g:var(--${g})` }, T.GAME_SHORT[g]), h("h2", {}, `Partida ${i + 1} de ${T.MATCHES}`),
       h("p", {}, g === "mk" ? "150cc · mismos objetos y CPU en todas las partidas" : "Sets a 3 juegos · misma cancha y reglas")),
     h("div", { class: "match" }, pair("A", A), mid, pair("B", B)),
     nx ? h("div", { class: "next" }, "Siguiente: ", h("b", {}, `Partida ${i + 2} · ${pairNames(nx[0])} vs ${pairNames(nx[1])}`)) : h("div", { class: "next" }, "Última partida de este juego"));
@@ -629,12 +629,14 @@ function viewSchedule() {
       h("span", { class: "mn" }, i + 1), side(A, "A"), h("span", { class: "vsm" }, "VS"), side(B, "B", true), st);
   });
   return h("section", { class: "view" },
-    h("div", { class: "vhead" }, h("span", { class: "tag", style: `--g:var(--${g})` }, `${done}/13`), h("h2", {}, "Calendario de parejas"),
+    h("div", { class: "vhead" }, h("span", { class: "tag", style: `--g:var(--${g})` }, `${done}/${T.MATCHES}`), h("h2", {}, "Calendario de parejas"),
       h("p", {}, `${T.GAME_NAMES[g]} · 4 partidas cada uno · nunca repite compañero`)),
     h("div", { class: "cal" }, cards));
 }
 
-function allDone() { return C.progress.mk === 13 && C.progress.tennis === 13 && C.progress.smash === 13; }
+function allDone() { return C.progress.mk === T.MATCHES && C.progress.tennis === T.MATCHES && C.progress.smash === C.progress.smashTotal; }
+function smashOutNote() { const out = T.NUMS.filter(n => C.smash[n].out); return out.length ? ` · no juega${out.length > 1 ? "n" : ""}: ${out.map(n => P[n].name).join(", ")}` : ""; }
+const ofTotal = g => g === "smash" ? C.progress.smashTotal : T.MATCHES;
 
 function viewPodium() {
   const order = C.generalOrder, done = allDone();
@@ -649,7 +651,7 @@ function viewPodium() {
   };
   return h("section", { class: "view" },
     h("div", { class: "vhead" }, h("span", { class: "tag", style: "--g:var(--red)" }, done ? "FINAL" : "PARCIAL"), h("h2", {}, done ? "¡Campeón de la tarde!" : "Podio por ahora"),
-      h("p", {}, done ? "Gracias por jugar el Torneo Caparazón Azul" : `Kart ${C.progress.mk}/13 · Tennis ${C.progress.tennis}/13 · Smash ${C.progress.smash}/13`)),
+      h("p", {}, done ? "Gracias por jugar el Torneo Caparazón Azul" : `Kart ${C.progress.mk}/${T.MATCHES} · Tennis ${C.progress.tennis}/${T.MATCHES} · Smash ${C.progress.smash}/${C.progress.smashTotal}`)),
     h("div", { class: "podium" }, step(1, "p2"), step(0, "p1"), step(2, "p3")),
     h("div", { class: "rest" }, order.slice(3).map(n => h("span", {}, h("em", {}, C.generalRank[n] + "."), `${P[n].name} · ${T.fmt(C.total[n])}`))));
 }
@@ -684,7 +686,7 @@ function viewRules() {
   const GC = { mk: "var(--mk)", tennis: "var(--tennis)", smash: "var(--smash)" };
   const body = [h("h3", {}, sl.title), sl.lead ? h("p", { class: "lead" }, sl.lead) : null];
   if (sl.games) body.push(h("div", { class: "gcards" }, sl.games.map(([g, name, sub], i) => h("div", { style: `--gc:${GC[g]}` }, h("em", {}, `Juego ${i + 1}`), h("b", {}, name), h("span", {}, sub)))));
-  if (sl.table) body.push(h("div", { class: "ptable" }, T.NUMS.map(n => h("div", {}, h("b", {}, n + ".º"), h("span", {}, String(14 - n)), h("small", {}, "pts")))));
+  if (sl.table) body.push(h("div", { class: "ptable" }, T.NUMS.map(n => h("div", {}, h("b", {}, n + ".º"), h("span", {}, String(T.PLAYERS + 1 - n)), h("small", {}, "pts")))));
   if (sl.items) body.push(h("ul", {}, sl.items.map((x, i) => h("li", {}, h("i", {}, String(i + 1)), h("span", {}, x)))));
   if (sl.sections) body.push(h("div", { class: "secs" }, sl.sections.map(([a, b]) => h("div", { class: "sec", style: `--sc:${GC[sl.theme] || "var(--red)"}` }, h("b", {}, a), h("span", {}, b)))));
   if (sl.foot) body.push(h("p", { class: "foot" }, sl.foot));
@@ -747,12 +749,12 @@ function paintDraw() {
   T.SCHEDULE.forEach(([A, B], i) => { const m = $("dm-" + i); if (m) m.classList.toggle("full", [...A, ...B].every(n => n <= ph.revealed)); });
   const num = ph.k + 1;
   if (ph.phase === "intro") {
-    if (!box.dataset.intro) { box.dataset.intro = "1"; box.replaceChildren(h("div", { class: "msg" }, "¡Prepárense!"), h("div", { class: "ch" }, "13 jugadores · 13 números · 13 partidas")); }
+    if (!box.dataset.intro) { box.dataset.intro = "1"; box.replaceChildren(h("div", { class: "msg" }, "¡Prepárense!"), h("div", { class: "ch" }, "12 jugadores · 12 números · 12 partidas")); }
     return;
   }
   delete box.dataset.intro;
   if (ph.phase === "done") {
-    if (!drawDone) { drawDone = true; if (!soundDone) { soundDone = true; SFX.fanfare(); } box.replaceChildren(h("div", { class: "msg" }, "¡Calendario listo!"), h("div", { class: "ch" }, "Así quedan las 13 partidas en parejas")); }
+    if (!drawDone) { drawDone = true; if (!soundDone) { soundDone = true; SFX.fanfare(); } box.replaceChildren(h("div", { class: "msg" }, "¡Calendario listo!"), h("div", { class: "ch" }, "Así quedan las 12 partidas en parejas")); }
     return;
   }
   if (ph.phase === "spin") {
@@ -788,7 +790,7 @@ function startRotation() {
 
 function ticker() {
   const t = S.tournament, g = t.current.game;
-  if (g === "smash") return ["SMASH", `Super Smash Bros. Ultimate · ${C.progress.smash}/13 jugadores con resultado`];
+  if (g === "smash") return ["SMASH", `Super Smash Bros. Ultimate · ${C.progress.smash}/${C.progress.smashTotal} jugadores con resultado`];
   const i = t.current.match, [A, B] = T.SCHEDULE[i];
   return [T.GAME_SHORT[g].toUpperCase(), `Partida ${i + 1}: ${pairNames(A)} vs ${pairNames(B)}`];
 }
@@ -809,7 +811,7 @@ function draw(force) {
   // Píldoras de progreso
   const pills = $("pills"); pills.replaceChildren();
   for (const g of ["mk", "tennis", "smash"]) pills.append(h("span", { class: "pill" + (S.tournament.current.game === g ? " on" : ""), "data-g": g },
-    T.GAME_SHORT[g], h("b", {}, `${C.progress[g]}/13`)));
+    T.GAME_SHORT[g], h("b", {}, `${C.progress[g]}/${ofTotal(g)}`)));
   const [lab, txt] = ticker(); $("tick-lab").textContent = lab; $("tick-txt").textContent = txt;
   // Vista
   const view = currentView();
@@ -966,7 +968,7 @@ function celebrate(ev) {
   const t = S.tournament, box = $("celebrate");
   const card = n => h("div", { class: "pc" }, av(P[n]), h("b", {}, P[n].name), h("span", {}, dots(P[n]), charName(P[n])));
   let title, sub, who, extra = null;
-  if (ev.g === "smash") { title = "¡Campeón de Smash!"; sub = "+13 pts generales"; who = [ev.n]; }
+  if (ev.g === "smash") { title = "¡Campeón de Smash!"; sub = `+${T.SMASH.campeon.pts} pts generales`; who = [ev.n]; }
   else if (ev.g === "mk") {
     const m = T.mkMatch(t, ev.i), [A, B] = T.SCHEDULE[ev.i];
     title = `Partida ${ev.i + 1}`;
@@ -1028,7 +1030,7 @@ function shuffleNumbers(t) {
   const nums = T.NUMS.slice();
   for (let i = nums.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const x = nums[i]; nums[i] = nums[j]; nums[j] = x; }
   t.numbers = {};
-  S.picks.slice(0, 13).forEach((p, k) => { t.numbers[p.id] = nums[k]; });
+  S.picks.slice(0, T.PLAYERS).forEach((p, k) => { t.numbers[p.id] = nums[k]; });
 }
 function renderMenu(msg) {
   touchMenu();
@@ -1058,7 +1060,7 @@ function renderMenu(msg) {
   } else {
     box.append(h("div", { class: "mrow" },
       b("Sortear en vivo", () => { if (assigned) { menuConfirm = "draw"; renderMenu(); } else doDraw(); }, "go"),
-      b("Repetir animación", () => send(x => { x.drawStart = true; x.view = "sorteo"; }), "", assigned < 13)));
+      b("Repetir animación", () => send(x => { x.drawStart = true; x.view = "sorteo"; }), "", assigned < T.PLAYERS)));
   }
   box.append(h("h3", {}, "Reglas"), h("div", { class: "mrow" },
     b("◀ Anterior", () => send(x => { x.view = "reglas"; x.slide = Math.max(0, k - 1); }, false), "", v !== "reglas" || k === 0),

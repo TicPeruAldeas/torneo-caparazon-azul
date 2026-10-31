@@ -3,33 +3,34 @@
   // Respaldo para navegadores de tablets algo antiguas
   if (!Element.prototype.replaceChildren) Element.prototype.replaceChildren = function () { while (this.firstChild) this.removeChild(this.firstChild); this.append.apply(this, arguments); };
   // Calendario de parejas rotativas (Mario Kart y Mario Tennis): [[pareja A], [pareja B]]
+  // 12 jugadores: 4 partidas cada uno, nunca el mismo compañero, nunca dos partidas seguidas
   const SCHEDULE = [
-    [[3, 11], [8, 9]], [[1, 5], [6, 10]], [[2, 4], [7, 13]], [[6, 12], [1, 3]], [[8, 13], [2, 5]],
-    [[7, 9], [10, 12]], [[4, 11], [2, 6]], [[3, 5], [7, 12]], [[1, 13], [9, 11]], [[4, 8], [3, 10]],
-    [[9, 13], [6, 7]], [[4, 5], [10, 11]], [[1, 2], [8, 12]]
+    [[8, 11], [5, 10]], [[2, 4], [1, 6]], [[7, 12], [3, 9]], [[2, 10], [1, 5]], [[7, 11], [4, 12]], [[8, 9], [3, 6]],
+    [[5, 12], [1, 4]], [[2, 8], [7, 9]], [[6, 10], [3, 11]], [[4, 7], [5, 9]], [[2, 6], [10, 12]], [[1, 11], [3, 8]]
   ];
-  const NUMS = Array.from({ length: 13 }, (_, i) => i + 1);
+  const PLAYERS = 12, MATCHES = SCHEDULE.length;
+  const NUMS = Array.from({ length: PLAYERS }, (_, i) => i + 1);
   const GAME_NAMES = { mk: "Mario Kart World", tennis: "Mario Tennis", smash: "Smash Bros. Ultimate" };
   const GAME_SHORT = { mk: "Mario Kart", tennis: "Tennis", smash: "Smash" };
   const SMASH = {
-    campeon: { label: "Campeón", pts: 13, slots: 1 },
-    sub: { label: "Subcampeón", pts: 12, slots: 1 },
-    tercero: { label: "3.º lugar", pts: 11, slots: 1 },
-    cuarto: { label: "4.º lugar", pts: 10, slots: 1 },
-    cuartos: { label: "Eliminado en cuartos", pts: 7.5, slots: 4 },
-    primera: { label: "Eliminado en 1.ª ronda", pts: 3, slots: 5 }
+    campeon: { label: "Campeón", pts: 12, slots: 1 },
+    sub: { label: "Subcampeón", pts: 11, slots: 1 },
+    tercero: { label: "3.º lugar", pts: 10, slots: 1 },
+    cuarto: { label: "4.º lugar", pts: 9, slots: 1 },
+    cuartos: { label: "Eliminado en cuartos", pts: 6.5, slots: 4 },
+    primera: { label: "Eliminado en 1.ª ronda", pts: 3, slots: 3 }
   };
 
   const fmt = x => x == null ? "—" : (Number.isInteger(x) ? String(x) : x.toFixed(1).replace(".", ","));
 
-  // Jugadores por número: nombre y personaje desde las reservas
+  // Jugadores por número: nombre y personaje desde las reservas; noSmash = no juega Smash
   function playersByNum(state) {
-    const t = state.tournament || {}, out = {};
+    const t = state.tournament || {}, out = {}, off = t.smashOut || [];
     for (const p of state.picks || []) {
       const n = t.numbers?.[p.id];
-      if (n) out[n] = { num: n, name: p.name, character: p.character, pickId: p.id };
+      if (n) out[n] = { num: n, name: p.name, character: p.character, pickId: p.id, noSmash: off.includes(p.id) };
     }
-    for (const n of NUMS) if (!out[n]) out[n] = { num: n, name: `Jugador ${n}`, character: null, pickId: null };
+    for (const n of NUMS) if (!out[n]) out[n] = { num: n, name: `Jugador ${n}`, character: null, pickId: null, noSmash: false };
     return out;
   }
 
@@ -53,7 +54,7 @@
     return { a: r?.a ?? null, b: r?.b ?? null, complete, winner: complete ? (r.a === 3 ? "A" : "B") : null };
   }
 
-  // Ranking de un juego → puntos generales 13..1; empates (mismos puntos, desempate y orden manual) se reparten
+  // Ranking de un juego → puntos generales 12..1; empates (mismos puntos, desempate y orden manual) se reparten
   function generalPoints(stats, tieKey, tb) {
     const key = n => [stats[n].pts, stats[n][tieKey], tb?.[n] ? 100 - tb[n] : 0];
     const order = [...NUMS].sort((a, b) => {
@@ -66,7 +67,7 @@
       const k = key(order[i]).join("|");
       while (j + 1 < order.length && key(order[j + 1]).join("|") === k) j++;
       let sum = 0;
-      for (let p = i; p <= j; p++) sum += 13 - p;
+      for (let p = i; p <= j; p++) sum += PLAYERS - p;
       for (let p = i; p <= j; p++) { stats[order[p]].gp = sum / (j - i + 1); stats[order[p]].rank = i + 1; stats[order[p]].tied = j > i; }
       i = j + 1;
     }
@@ -105,9 +106,10 @@
     if (!mkDone) for (const n of NUMS) mk[n].gp = null;
     if (!tennisDone) for (const n of NUMS) tennis[n].gp = null;
     let smashDone = 0;
+    const P = playersByNum(state), smashIn = NUMS.filter(n => !P[n].noSmash);
     for (const n of NUMS) {
-      const st = t.smash?.[n];
-      smash[n] = { stage: st || null, gp: st ? SMASH[st].pts : null };
+      const out = P[n].noSmash, st = out ? null : t.smash?.[n];
+      smash[n] = { stage: st || null, gp: st ? SMASH[st].pts : null, out };
       if (st) smashDone++;
     }
     const total = {};
@@ -115,7 +117,7 @@
     const generalOrder = [...NUMS].sort((a, b) => total[b] - total[a] || a - b);
     const generalRank = {};
     generalOrder.forEach((n, i) => { generalRank[n] = i > 0 && total[n] === total[generalOrder[i - 1]] ? generalRank[generalOrder[i - 1]] : i + 1; });
-    return { mk, tennis, smash, total, mkOrder, tennisOrder, generalOrder, generalRank, progress: { mk: mkDone, tennis: tennisDone, smash: smashDone } };
+    return { mk, tennis, smash, total, mkOrder, tennisOrder, generalOrder, generalRank, smashIn, progress: { mk: mkDone, tennis: tennisDone, smash: smashDone, smashTotal: smashIn.length } };
   }
 
   const matchDone = (t, g, i) => g === "mk" ? mkMatch(t, i).complete : tennisMatch(t, i).complete;
@@ -157,7 +159,7 @@
     const rows = [["Puesto", "Número", "Jugador", "Personaje", "Pts Mario Kart", "Pts Tennis", "Pts Smash", "Total", "MK puntos", "MK 1.º puestos", "Tennis puntos", "Tennis victorias", "Smash etapa"]];
     for (const n of C.generalOrder) {
       rows.push([C.generalRank[n], n, P[n].name, P[n].character || "", fmt(C.mk[n].gp), fmt(C.tennis[n].gp), fmt(C.smash[n].gp), fmt(C.total[n]),
-        C.mk[n].pts, C.mk[n].firsts, C.tennis[n].pts, C.tennis[n].wins, C.smash[n].stage ? SMASH[C.smash[n].stage].label : ""]);
+        C.mk[n].pts, C.mk[n].firsts, C.tennis[n].pts, C.tennis[n].wins, C.smash[n].out ? "No juega" : C.smash[n].stage ? SMASH[C.smash[n].stage].label : ""]);
     }
     return "﻿" + rows.map(r => r.map(q).join(";")).join("\r\n");
   }
@@ -185,12 +187,12 @@
 
   // Presentación de reglas: una pantalla a la vez
   const SLIDES = [
-    { theme: "mario", tag: "Bienvenida", title: "Torneo general de la tarde", lead: "13 jugadores · 3 juegos · gana quien sume más puntos generales",
+    { theme: "mario", tag: "Bienvenida", title: "Torneo general de la tarde", lead: "12 jugadores · 3 juegos · gana quien sume más puntos generales",
       games: [["mk", "Mario Kart World", "Supervivencia en parejas rotativas"], ["tennis", "Mario Tennis", "Dobles en parejas rotativas"], ["smash", "Super Smash Bros. Ultimate", "Torneo 1 vs 1"]] },
     { theme: "mario", tag: "Puntos generales", title: "Así se suman los puntos", lead: "En cada juego se arma un ranking. Según tu puesto, sumas:",
-      table: true, foot: "Si dos o más jugadores empatan en un puesto, se reparten los puntos de esos puestos (ej.: empate en 3.º y 4.º = 10,5 cada uno)." },
+      table: true, foot: "Si dos o más jugadores empatan en un puesto, se reparten los puntos de esos puestos (ej.: empate en 3.º y 4.º = 9,5 cada uno)." },
     { theme: "mario", tag: "Parejas", title: "Calendario de parejas rotativas", lead: "Se usa en Mario Kart y en Mario Tennis",
-      items: ["Cada jugador tiene un número del 1 al 13, por sorteo.", "Cada uno juega 4 partidas.", "Nunca repites compañero.", "Nunca juegas dos partidas seguidas."] },
+      items: ["Cada jugador tiene un número del 1 al 12, por sorteo.", "Cada uno juega 4 partidas.", "Nunca repites compañero.", "Nunca juegas dos partidas seguidas."] },
     { theme: "mk", tag: "Juego 1", title: "Mario Kart World · Supervivencia", sections: [
       ["Configuración", "150cc, la misma dificultad de CPU y los mismos objetos en todas las partidas."],
       ["Puntos", "Cada jugador suma 25 − su posición final (1.º = 24, 10.º = 15, 24.º = 1). La pareja que sume más en la partida gana +3 para cada integrante."],
@@ -204,9 +206,9 @@
       ["Desempate", "Más partidos ganados; si siguen empatados, tie-break directo."],
       ["Duración", "1 h 30 min a 1 h 40 min."]] },
     { theme: "smash", tag: "Juego 3", title: "Super Smash Bros. Ultimate", sections: [
-      ["Formato", "Eliminación directa 1 vs 1, individual. El juego arma el cuadro al azar (3 jugadores pasan directo a la siguiente ronda)."],
+      ["Formato", "Eliminación directa 1 vs 1, individual, con 11 jugadores. El juego arma el cuadro al azar (5 jugadores pasan directo a cuartos)."],
       ["Configuración", "3 vidas, 7 minutos, sin objetos, escenario fijo (Campo de Batalla o Destino Final). Final al mejor de 3."],
-      ["Puntos generales", "Campeón 13 · Subcampeón 12 · 3.º lugar 11 · 4.º lugar 10 · eliminados en cuartos 7,5 · eliminados en primera ronda 3."],
+      ["Puntos generales", "Campeón 12 · Subcampeón 11 · 3.º lugar 10 · 4.º lugar 9 · eliminados en cuartos 6,5 · eliminados en primera ronda 3."],
       ["Duración", "50 a 60 minutos."]] },
     { theme: "mario", tag: "Importante", title: "Antes de empezar",
       items: ["Anotar los resultados apenas termine cada partida.", "Las reglas no se cambian a mitad de un juego.", "Gana la tarde quien sume más puntos generales en los 3 juegos."] }
@@ -219,7 +221,7 @@
     const ms = serverNow() - draw.at;
     if (ms < DRAW.INTRO) return { phase: "intro", revealed: 0, k: 0 };
     const step = Math.floor((ms - DRAW.INTRO) / DRAW.STEP);
-    if (step >= 13) return { phase: "done", revealed: 13, k: 12 };
+    if (step >= PLAYERS) return { phase: "done", revealed: PLAYERS, k: PLAYERS - 1 };
     const inStep = (ms - DRAW.INTRO) % DRAW.STEP;
     return { phase: inStep < DRAW.SPIN ? "spin" : "show", revealed: inStep < DRAW.SPIN ? step : step + 1, k: step };
   }
@@ -231,5 +233,5 @@
     return (hh ? hh + ":" + String(mm).padStart(2, "0") : String(mm).padStart(2, "0")) + ":" + String(ss).padStart(2, "0");
   }
 
-  window.Torneo = { SCHEDULE, NUMS, GAME_NAMES, GAME_SHORT, SMASH, fmt, playersByNum, mkMatch, tennisMatch, matchDone, compute, onDeck, nextMatchFor, toCsv, serverNow, elapsed, fmtDuration, SLIDES, DRAW, drawPhase, connect };
+  window.Torneo = { SCHEDULE, NUMS, PLAYERS, MATCHES, GAME_NAMES, GAME_SHORT, SMASH, fmt, playersByNum, mkMatch, tennisMatch, matchDone, compute, onDeck, nextMatchFor, toCsv, serverNow, elapsed, fmtDuration, SLIDES, DRAW, drawPhase, connect };
 })();

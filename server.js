@@ -30,6 +30,9 @@ function save() {
   fs.renameSync(tmp, STATE_FILE);
 }
 
+// Torneo de la tarde: 12 jugadores y 12 partidas en parejas
+const MATCHES = 12, PLAYERS = 12;
+
 // Restaura reservas perdidas desde restore.json, una sola vez por id y sin pisar personajes ya tomados.
 // El dueño queda al azar: solo el organizador puede liberarlas.
 try {
@@ -66,6 +69,26 @@ try {
     save();
     console.log(`Cambio ${m.from} → ${m.to}: ${pick && !taken ? pick.name : "sin cambios"}`);
   }
+  // Cambios de plantel, una vez por id: quitar reservas, fijar números y quién no juega Smash
+  for (const e of restore.edits || []) {
+    if (!e.id || state.restored.includes(e.id)) continue;
+    const t = state.tournament = { ...emptyTournament(), ...(state.tournament || {}) };
+    t.numbers = { ...(t.numbers || {}) };
+    for (const ch of e.remove || []) {
+      const p = state.picks.find(x => x.character === ch);
+      if (p) { state.picks = state.picks.filter(x => x !== p); delete t.numbers[p.id]; console.log(`Reserva quitada: ${p.name} (${ch})`); }
+    }
+    for (const [id, n] of Object.entries(e.numbers || {})) if (state.picks.some(p => p.id === id)) {
+      for (const [k, v] of Object.entries(t.numbers)) if (v === n) delete t.numbers[k];
+      t.numbers[id] = n;
+    }
+    for (const [id, n] of Object.entries(t.numbers)) if (!(n >= 1 && n <= PLAYERS)) delete t.numbers[id];
+    if (e.smashOut) t.smashOut = e.smashOut.filter(id => state.picks.some(p => p.id === id));
+    t.draw = { at: 0, id: "" };
+    state.restored.push(e.id);
+    save();
+    console.log(`Plantel actualizado (${e.id})`);
+  }
 } catch (err) {
   if (err.code !== "ENOENT") console.error("No se pudo restaurar:", err.message);
 }
@@ -97,13 +120,12 @@ function publicState() {
 }
 
 // Torneo de la tarde: números del sorteo, resultados de los 3 juegos y qué se ve en la transmisión
-const MATCHES = 13, PLAYERS = 13;
 const SMASH_STAGES = ["campeon", "sub", "tercero", "cuarto", "cuartos", "primera"];
 const VIEWS = ["auto", "general", "mk", "tennis", "smash", "partida", "calendario", "podio", "reglas", "sorteo"];
 const SLIDES = 7;
 const GAMES = ["mk", "tennis", "smash"];
 function emptyTournament() {
-  return { numbers: {}, mk: {}, tennis: {}, smash: {}, tb: { mk: {}, tennis: {} }, view: "auto", current: { game: "mk", match: 0 }, countdown: { until: 0, autoStart: false }, slide: 0, draw: { at: 0, id: "" },
+  return { numbers: {}, smashOut: [], mk: {}, tennis: {}, smash: {}, tb: { mk: {}, tennis: {} }, view: "auto", current: { game: "mk", match: 0 }, countdown: { until: 0, autoStart: false }, slide: 0, draw: { at: 0, id: "" },
     timers: { match: { acc: 0, start: 0, running: false }, total: { acc: 0, start: 0, running: false } } };
 }
 const intIn = (v, lo, hi) => Number.isInteger(v) && v >= lo && v <= hi;
@@ -115,6 +137,8 @@ function sanitizeTournament(input) {
   for (const [id, n] of Object.entries(obj(t.numbers))) {
     if (pickIds.has(id) && intIn(n, 1, PLAYERS) && !usedNums.has(n)) { out.numbers[id] = n; usedNums.add(n); }
   }
+  // Jugadores que no juegan Smash (por reserva)
+  if (Array.isArray(t.smashOut)) out.smashOut = [...new Set(t.smashOut.filter(id => pickIds.has(id)))];
   for (const [m, res] of Object.entries(obj(t.mk))) {
     if (!intIn(+m, 0, MATCHES - 1)) continue;
     const r = {};
