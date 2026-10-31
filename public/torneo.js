@@ -197,11 +197,12 @@
       ["Bono +3", "Si tu pareja gana el versus, cada uno recibe +3 puntos adicionales, individualmente. Ej.: si llegaste 3.º, te tocan 22 por tu puesto + 3 del bono = 25.", "gold"],
       ["Al final", "Se suman tus 4 carreras. Si dos quedan con los mismos puntos, va adelante quien ganó más carreras."]] },
     { theme: "tennis", tag: "Juego 2", title: "Mario Tennis · tus puntos", sections: [
-      ["Partido", "Cada partido es un versus entre 2 parejas. Gana la pareja que llegue primero a 3 juegos."],
-      ["Tus puntos", "Por cada juego que gane tu pareja, sumas 1 punto (tú y tu compañero)."],
-      ["Bono +3", "Solo para la pareja que gana el partido: +3 puntos adicionales para cada uno, individualmente. Si pierdes, no hay bono, pero te quedas con 1 punto por cada juego que ganaste.", "gold"],
-      ["Ejemplo", "Partido que termina 3 a 2. Ganadores: 3 juegos + 3 de bono = 6 puntos cada uno. Perdedores: 2 juegos = 2 puntos cada uno (sin bono)."],
-      ["Al final", "Se suman tus 4 partidos. Si dos quedan con los mismos puntos, va adelante quien ganó más partidos."]] },
+      ["Partido", "2 parejas, un versus. Gana el partido la pareja que llega primero a 3 juegos."],
+      ["Tus puntos", "1 punto por cada juego que gane tu pareja, ganes o pierdas el partido."],
+      ["Bono +3", "Solo si tu pareja gana el partido: +3 para cada uno. Si pierden, no hay bono.", "gold"],
+      ["Al final", "Se suman tus 4 partidos. Si dos quedan con los mismos puntos, va adelante quien ganó más partidos."]],
+      example: { title: "Ejemplo: el partido termina 3 a 2", head: ["", "Juegos ganados", "Bono", "Puntos para cada uno"],
+        rows: [["Pareja que gana", "3", "+3", "6"], ["Pareja que pierde", "2", "—", "2"]] } },
     { theme: "smash", tag: "Juego 3", title: "Smash Bros. · tus puntos", sections: [
       ["Formato", "Todos contra todos en llaves 1 vs 1: si pierdes, quedas eliminado. Juegan 11."],
       ["Puntos", "Según hasta dónde llegues: Campeón 12 · Subcampeón 11 · 3.º 10 · 4.º 9 · eliminado en cuartos 6,5 · eliminado en primera ronda 3."]] },

@@ -358,6 +358,14 @@
   .ptable b { font-family: var(--display); font-weight: 400; font-size: 30px; }
   .ptable span { font-family: var(--display); font-size: 46px; line-height: 1; color: var(--red); }
   .ptable small { font-size: 18px; font-weight: 800; color: var(--muted); }
+  .exm { display: grid; gap: 8px; }
+  .exm p { margin: 0; font-family: var(--display); font-size: 32px; }
+  .exm table { border-collapse: separate; border-spacing: 0; border: 3px solid var(--ink); border-radius: 14px; overflow: hidden; font-size: 32px; font-weight: 700; }
+  .exm th, .exm td { padding: 8px 18px; text-align: center; border-top: 2px solid rgba(27,26,46,.15); }
+  .exm thead th { border-top: 0; background: var(--cream); font-size: 24px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+  .exm tbody th { text-align: left; }
+  .exm td.gold { color: #8A6410; font-weight: 800; }
+  .exm td.xpts { font-family: var(--display); font-size: 40px; color: #1E7A2E; }
   .slide .foot { margin: 0; font-size: 30px; font-weight: 700; background: var(--cream); border: 3px dashed var(--ink); border-radius: 14px; padding: 12px 18px; }
   .gcards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
   .gcards div { border: 4px solid var(--ink); border-radius: 20px; padding: 26px; display: grid; gap: 8px; background: var(--gc); color: #fff; box-shadow: 0 6px 0 var(--ink); }
@@ -698,6 +706,9 @@ function viewRules() {
   if (sl.table) body.push(h("div", { class: "ptable" }, T.NUMS.map(n => h("div", {}, h("b", {}, n + ".º"), h("span", {}, String(T.PLAYERS + 1 - n)), h("small", {}, "pts")))));
   if (sl.items) body.push(h("ul", {}, sl.items.map((x, i) => h("li", {}, h("i", {}, String(i + 1)), h("span", {}, x)))));
   if (sl.sections) body.push(h("div", { class: "secs" }, sl.sections.map(([a, b, c]) => h("div", { class: "sec" + (c ? " " + c : ""), style: `--sc:${GC[sl.theme] || "var(--red)"}` }, h("b", {}, a), h("span", {}, b)))));
+  if (sl.example) body.push(h("div", { class: "exm" }, h("p", {}, sl.example.title),
+    h("table", {}, h("thead", {}, h("tr", {}, sl.example.head.map(x => h("th", {}, x)))),
+      h("tbody", {}, sl.example.rows.map(r => h("tr", {}, r.map((x, i) => h(i ? "td" : "th", { class: i === 2 && x !== "—" ? "gold" : i === 3 ? "xpts" : "" }, x))))))));
   if (sl.foot) body.push(h("p", { class: "foot" }, sl.foot));
   body.push(h("div", { class: "sprog" }, T.SLIDES.map((_, i) => h("i", { class: i === k ? "on" : "" })), `Regla ${k + 1} de ${T.SLIDES.length}`));
   return h("section", { class: "view" },
