@@ -197,9 +197,9 @@
       ["Bono +3", "Si tu pareja gana el versus, cada uno recibe +3 puntos adicionales, individualmente. Ej.: si llegaste 3.º, te tocan 22 por tu puesto + 3 del bono = 25.", "gold"],
       ["Al final", "Se suman tus 4 carreras. Si dos quedan con los mismos puntos, va adelante quien ganó más carreras."]] },
     { theme: "tennis", tag: "Juego 2", title: "Mario Tennis · tus puntos", sections: [
-      ["Por juego", "Cada juego que gana tu pareja = 1 punto para ti y para tu compañero."],
-      ["Ganar", "La pareja que gana el partido (la primera en llegar a 3 juegos) suma +3 cada uno."],
-      ["Ejemplo", "Si ganan 3 a 1: cada ganador suma 3 + 3 = 6 y cada perdedor suma 1."],
+      ["Partido", "Cada partido es un versus entre 2 parejas. Gana la pareja que llegue primero a 3 juegos."],
+      ["Tus puntos", "Por cada juego que gane tu pareja, sumas 1 punto (tú y tu compañero)."],
+      ["Bono +3", "Si tu pareja gana el partido, cada uno recibe +3 puntos adicionales, individualmente. Ej.: ganan 3 a 1 → sumas 3 por los juegos + 3 del bono = 6. Los que perdieron se llevan 1 (el juego que ganaron).", "gold"],
       ["Al final", "Se suman tus 4 partidos. Si dos quedan con los mismos puntos, va adelante quien ganó más partidos."]] },
     { theme: "smash", tag: "Juego 3", title: "Smash Bros. · tus puntos", sections: [
       ["Formato", "Todos contra todos en llaves 1 vs 1: si pierdes, quedas eliminado. Juegan 11."],
