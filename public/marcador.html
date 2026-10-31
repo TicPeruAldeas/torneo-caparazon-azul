@@ -277,6 +277,17 @@
   #ctl { position: fixed; left: max(16px, env(safe-area-inset-left)); bottom: max(16px, env(safe-area-inset-bottom)); z-index: 5; font: 800 20px var(--cond);
     padding: 12px 18px; min-height: 52px; border-radius: 14px; border: 3px solid var(--ink); background: var(--red); color: #fff; box-shadow: 0 4px 0 var(--ink); cursor: pointer; transition: opacity .4s; touch-action: manipulation; }
   #ctl.hide { opacity: 0; pointer-events: none; }
+  #mbtn { position: fixed; left: calc(max(16px, env(safe-area-inset-left)) + 150px); bottom: max(16px, env(safe-area-inset-bottom)); z-index: 5; font: 800 22px var(--cond);
+    padding: 12px 22px; min-height: 56px; border-radius: 14px; border: 3px solid var(--ink); background: var(--green); color: #fff; box-shadow: 0 4px 0 var(--ink); cursor: pointer; touch-action: manipulation; white-space: nowrap; }
+  #mbtn.stop { background: var(--red); }
+  #mbtn.next { background: var(--yellow); color: var(--ink); }
+  #menu select { font: 700 22px var(--cond); padding: 8px 10px; min-height: 52px; border: 3px solid var(--ink); border-radius: 12px; background: var(--cream); }
+  #menu .rrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; font-size: 22px; font-weight: 800; }
+  #menu .rgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  #menu .rpair { border: 3px solid var(--ink); border-radius: 14px; padding: 10px 12px; display: grid; gap: 8px; }
+  #menu .rpair > b { font-size: 16px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  #menu .score { display: flex; gap: 8px; }
+  #menu .score button { min-width: 64px; font-family: var(--display); font-size: 26px; }
   .rnav { position: fixed; top: 50%; z-index: 5; width: 64px; height: 64px; margin-top: -32px; border-radius: 50%; border: 3px solid var(--ink); background: var(--yellow); color: var(--ink);
     font: 400 30px var(--display); box-shadow: 0 4px 0 var(--ink); display: grid; place-items: center; cursor: pointer; touch-action: manipulation; opacity: .9; }
   .rnav:disabled { opacity: .3; }
@@ -285,6 +296,7 @@
   #menu { position: fixed; inset: 0; z-index: 7; display: grid; place-items: center; background: rgba(27,26,46,.55); padding: max(12px, env(safe-area-inset-top)) 12px; }
   #menu .box { width: min(760px, 100%); max-height: 100%; overflow-y: auto; background: #fff; border: 4px solid var(--ink); border-radius: 20px; box-shadow: 0 8px 0 var(--ink); padding: 16px 18px; display: grid; gap: 12px;
     font-family: var(--cond); color: var(--ink); }
+  #menu .box.wide { width: min(1000px, 100%); }
   #menu .mh { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
   #menu h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 30px; }
   #menu h3 { margin: 4px 0 0; font-size: 16px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
@@ -455,6 +467,7 @@
 <button id="fs" type="button">Pantalla completa</button>
 <button id="snd" type="button">Sonido</button>
 <button id="ctl" type="button">Controles</button>
+<button id="mbtn" type="button" hidden></button>
 <button id="rprev" class="rnav" type="button" aria-label="Regla anterior" hidden>◀</button>
 <button id="rnext" class="rnav" type="button" aria-label="Regla siguiente" hidden>▶</button>
 <div id="menu" hidden></div>
@@ -838,6 +851,7 @@ function draw(force) {
   const g = S.tournament.current.game;
   const sk = S.tournament.slide || 0;
   $("rprev").hidden = $("rnext").hidden = view !== "reglas";
+  paintMatchBtn();
   $("rprev").disabled = sk === 0; $("rnext").disabled = sk >= T.SLIDES.length - 1;
   $("stage").dataset.theme = ["mk", "tennis", "smash"].includes(view) ? view : ["partida", "calendario", "cuenta"].includes(view) ? g
     : view === "reglas" ? (T.SLIDES[S.tournament.slide || 0]?.theme || "mario") : "mario";
@@ -1094,12 +1108,90 @@ function renderMenu(msg) {
   box.append(h("h3", {}, "Qué se ve"), h("div", { class: "mrow" }, views.map(([id, l]) => b(l, () => send(x => { x.view = id; }), v === id ? "on" : ""))));
   const tm = (t.timers || {}).match || {};
   box.append(h("h3", {}, "Partida"), h("div", { class: "mrow" },
+    ...(t.current.game !== "smash" ? [tm.running ? b("■ Terminar y poner resultado", () => renderResult(), "warn") : b("▶ Iniciar partida", startMatch, "go")] : []),
     b("Cuenta de 2 min", () => send(x => { x.countdownSeconds = 120; })),
     b(tm.running ? "Pausar cronómetro" : "Iniciar cronómetro", () => send(x => { x.timerCmd = { match: tm.running ? "pause" : "start" }; }))));
   if (msg) box.append(h("p", { class: "note err" }, msg));
   menu.replaceChildren(box); menu.hidden = false;
 }
 ctlBtn.addEventListener("click", () => { unlockAudio(); renderMenu(); });
+
+// Flujo de partida desde la tablet: Iniciar → la TV muestra la partida con su cronómetro → Terminar → resultado → Siguiente
+function nextPendingMatch(t, g, from) {
+  for (let k = from + 1; k < T.MATCHES; k++) if (!T.matchDone(t, g, k)) return k;
+  return Math.min(from + 1, T.MATCHES - 1);
+}
+function matchState() {
+  const t = S.tournament, g = t.current.game, i = t.current.match;
+  if (g !== "mk" && g !== "tennis") return null;
+  const running = !!((t.timers || {}).match || {}).running;
+  return { t, g, i, running, done: T.matchDone(t, g, i) };
+}
+function paintMatchBtn() {
+  const btn = $("mbtn"), m = matchState();
+  btn.hidden = !m;
+  if (!m) return;
+  const label = m.running ? "■ Terminar partida " + (m.i + 1) : m.done ? (m.i < T.MATCHES - 1 ? "Siguiente partida ▶" : "✓ Juego terminado") : "▶ Iniciar partida " + (m.i + 1);
+  if (btn.textContent !== label) btn.textContent = label;
+  btn.className = m.running ? "stop" : m.done ? "next" : "";
+  btn.disabled = !m.running && m.done && m.i >= T.MATCHES - 1;
+}
+function startMatch() {
+  send(x => { x.view = "partida"; x.countdownSeconds = 0; x.timerCmd = { match: "restart" }; });
+}
+$("mbtn").addEventListener("click", () => {
+  unlockAudio();
+  const m = matchState();
+  if (!m) return;
+  if (!ctlPass) { renderMenu(); return; }
+  if (m.running) renderResult();
+  else if (m.done) send(x => { x.current.match = nextPendingMatch(x, m.g, m.i); x.view = "partida"; x.timerCmd = { match: "reset" }; }, "keep");
+  else startMatch();
+});
+function renderResult(msg) {
+  const m = matchState();
+  if (!m) return;
+  touchMenu();
+  const { t, g, i } = m, [A, B] = T.SCHEDULE[i];
+  const b = (label, fn, cls) => { const e = h("button", { type: "button", class: cls || "" }, label); e.addEventListener("click", fn); return e; };
+  const box = h("div", { class: "box wide" });
+  box.append(h("div", { class: "mh" }, h("h2", {}, `Resultado · Partida ${i + 1}`), b("Cerrar ✕", closeMenu)));
+  let save;
+  if (g === "mk") {
+    const cur = { ...((t.mk || {})[i] || {}) }, sels = {};
+    const pair = (lab, pr) => h("div", { class: "rpair" }, h("b", {}, lab), pr.map(n => {
+      const sel = h("select", { "aria-label": `Puesto de ${P[n].name}` }, opts(cur[n] || "", ["", ...Array.from({ length: 24 }, (_, k) => k + 1)], v => v === "" ? "Puesto…" : v + ".º"));
+      sels[n] = sel;
+      return h("div", { class: "rrow" }, h("span", {}, P[n].name), sel);
+    }));
+    box.append(h("p", { class: "note" }, "¿En qué puesto llegó cada uno?"), h("div", { class: "rgrid" }, pair("Pareja A", A), pair("Pareja B", B)));
+    save = () => {
+      const r = {};
+      for (const n of [...A, ...B]) { const v = +sels[n].value; if (!v) return renderResult("Falta el puesto de " + P[n].name + "."); r[n] = v; }
+      if (new Set(Object.values(r)).size < 4) return renderResult("Hay dos jugadores con el mismo puesto.");
+      send(x => { x.mk = x.mk || {}; x.mk[i] = r; x.timerCmd = { match: "pause" }; });
+    };
+  } else {
+    const cur = (t.tennis || {})[i] || {};
+    const sc = { a: cur.a ?? null, b: cur.b ?? null };
+    const row = (key, lab, pr) => {
+      const btns = [0, 1, 2, 3].map(v => { const e = b(String(v), () => { sc[key] = v; btns.forEach((x, k) => x.classList.toggle("on", k === v)); touchMenu(); }); if (sc[key] === v) e.classList.add("on"); return e; });
+      return h("div", { class: "rpair" }, h("b", {}, lab), h("div", { class: "rrow" }, h("span", {}, pr.map(n => P[n].name).join(" y ")), h("div", { class: "score" }, btns)));
+    };
+    box.append(h("p", { class: "note" }, "¿Cuántos juegos ganó cada pareja? La que gana llega a 3."), h("div", { class: "rgrid" }, row("a", "Pareja A", A), row("b", "Pareja B", B)));
+    save = () => {
+      if (sc.a == null || sc.b == null) return renderResult("Marca los juegos de las dos parejas.");
+      if (!((sc.a === 3) !== (sc.b === 3))) return renderResult("Una sola pareja debe tener 3 juegos.");
+      send(x => { x.tennis = x.tennis || {}; x.tennis[i] = { a: sc.a, b: sc.b }; x.timerCmd = { match: "pause" }; });
+    };
+  }
+  if (msg) box.append(h("p", { class: "note err" }, msg));
+  box.append(h("div", { class: "mrow" }, b("Guardar resultado", () => save(), "go"), b("Seguir jugando", closeMenu)));
+  menu.replaceChildren(box); menu.hidden = false;
+}
+function opts(sel, values, labelFn) {
+  return values.map(v => { const o = h("option", { value: v }, labelFn(v)); if (String(v) === String(sel)) o.selected = true; return o; });
+}
 // Flechas de reglas: cambian la pantalla para todos (pide la contraseña la primera vez)
 function stepSlide(d) {
   if (!ctlPass) { renderMenu(); return; }

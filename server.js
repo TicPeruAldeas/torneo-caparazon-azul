@@ -183,10 +183,11 @@ function sanitizeTournament(input) {
     if (cmd === "start" && !tm.running) { tm.running = true; tm.start = now; }
     else if (cmd === "pause" && tm.running) { tm.acc = Math.min(DAY, tm.acc + now - tm.start); tm.running = false; tm.start = 0; }
     else if (cmd === "reset") { tm.acc = 0; tm.running = false; tm.start = 0; }
+    else if (cmd === "restart") { tm.acc = 0; tm.running = true; tm.start = now; }
   };
-  for (const key of ["match", "total"]) if (["start", "pause", "reset"].includes(cmds[key])) apply(key, cmds[key]);
+  for (const key of ["match", "total"]) if (["start", "pause", "reset", "restart"].includes(cmds[key])) apply(key, cmds[key]);
   // Al iniciar una partida, el tiempo total arranca solo si aún no empezó
-  if (cmds.match === "start" && !out.timers.total.running && out.timers.total.acc === 0) apply("total", "start");
+  if ((cmds.match === "start" || cmds.match === "restart") && !out.timers.total.running && out.timers.total.acc === 0) apply("total", "start");
   return out;
 }
 
