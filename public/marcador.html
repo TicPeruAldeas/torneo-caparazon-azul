@@ -1070,8 +1070,8 @@ let ctlPass = null, menuTimer = null, menuConfirm = null;
 try { ctlPass = sessionStorage.getItem("torneo-admin"); } catch (e) {}
 function showCtl() { ctlBtn.classList.remove("hide"); clearTimeout(ctlBtn.t); ctlBtn.t = setTimeout(() => ctlBtn.classList.add("hide"), 8000); }
 ctlBtn.t = setTimeout(() => ctlBtn.classList.add("hide"), 8000);
-function closeMenu() { menu.hidden = true; menuConfirm = null; clearTimeout(menuTimer); }
-function touchMenu() { clearTimeout(menuTimer); menuTimer = setTimeout(closeMenu, 20000); }
+function closeMenu() { delete menu.dataset.keep; menu.hidden = true; menuConfirm = null; clearTimeout(menuTimer); }
+function touchMenu() { clearTimeout(menuTimer); if (!menu.dataset.keep) menuTimer = setTimeout(closeMenu, 20000); }
 async function send(mut, close = true) {
   const t = JSON.parse(JSON.stringify(S.tournament));
   mut(t);
@@ -1090,6 +1090,7 @@ function shuffleNumbers(t) {
   S.picks.slice(0, T.PLAYERS).forEach((p, k) => { t.numbers[p.id] = nums[k]; });
 }
 function renderMenu(msg) {
+  delete menu.dataset.keep;
   touchMenu();
   const b = (label, fn, cls, dis) => { const e = h("button", { type: "button", class: cls || "" }, label); e.disabled = !!dis; e.addEventListener("click", fn); return e; };
   const box = h("div", { class: "box" });
@@ -1154,10 +1155,10 @@ function paintMatchBtn() {
   const btn = $("mbtn"), m = matchState();
   btn.hidden = !m;
   if (!m) return;
-  const over = !m.running && C.progress[m.g] >= T.MATCHES;
-  const label = over ? `🏁 ${T.GAME_SHORT[m.g]} terminado` : m.running ? "■ Terminar partida " + (m.i + 1) : m.done ? "Siguiente partida ▶" : "▶ Iniciar partida " + (m.i + 1);
+  const over = C.progress[m.g] >= T.MATCHES;
+  const label = over ? `🏁 ${T.GAME_SHORT[m.g]} terminado` : m.done ? "Siguiente partida ▶" : m.running ? "■ Terminar partida " + (m.i + 1) : "▶ Iniciar partida " + (m.i + 1);
   if (btn.textContent !== label) btn.textContent = label;
-  btn.className = (over ? "over" : m.running ? "stop" : m.done ? "next" : "") + (currentView() === "partida" ? "" : " auto");
+  btn.className = (over ? "over" : m.done ? "next" : m.running ? "stop" : "") + (currentView() === "partida" ? "" : " auto");
   btn.disabled = over;
 }
 function finishIfLast(x, g) {
@@ -1172,14 +1173,15 @@ $("mbtn").addEventListener("click", () => {
   const m = matchState();
   if (!m) return;
   if (!ctlPass) { renderMenu(); return; }
-  if (m.running) renderResult();
-  else if (m.done) send(x => { x.current.match = nextPendingMatch(x, m.g, m.i); x.view = "partida"; x.timerCmd = { match: "reset" }; }, "keep");
+  if (m.done && C.progress[m.g] >= T.MATCHES) return;
+  if (m.done) send(x => { x.current.match = nextPendingMatch(x, m.g, m.i); x.view = "partida"; x.timerCmd = { match: "reset" }; }, "keep");
+  else if (m.running) renderResult();
   else startMatch();
 });
 function renderResult(msg) {
   const m = matchState();
   if (!m) return;
-  touchMenu();
+  menu.dataset.keep = "1"; clearTimeout(menuTimer);
   const { t, g, i } = m, [A, B] = T.SCHEDULE[i];
   const b = (label, fn, cls) => { const e = h("button", { type: "button", class: cls || "" }, label); e.addEventListener("click", fn); return e; };
   const box = h("div", { class: "box wide" });
