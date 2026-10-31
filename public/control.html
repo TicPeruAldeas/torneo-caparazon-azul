@@ -127,7 +127,7 @@
     <span class="status" id="status" role="status" aria-live="polite">Conectando…</span>
     <div class="grow">
       <button class="btn" id="undo" type="button" disabled>Deshacer</button>
-      <a class="btn" href="/marcador" target="_blank" rel="noopener">Abrir marcador</a>
+      <a class="btn" href="/marcador" target="_blank" rel="noopener">Abrir transmisión</a>
       <a class="btn" href="/resultados" target="_blank" rel="noopener">Resultados públicos</a>
       <a class="btn" href="/guia" target="_blank" rel="noopener">Guía</a>
       <a class="btn" href="/" target="_blank" rel="noopener">Elegir personaje</a>
@@ -253,7 +253,8 @@ function tabQuick() {
         h("button", { disabled: !(left > 0), onclick: () => startCd(0) }, "Cancelar"))),
     h("div", { class: "card" },
       h("div", { class: "label" }, "¿Qué se ve en la TV?"),
-      h("div", { class: "seg" }, VIEWS.map(([v, l]) => h("button", { "aria-pressed": String(W.view === v), onclick: () => change(w => { w.view = v; }) }, l)))));
+      h("div", { class: "seg" }, VIEWS.map(([v, l]) => h("button", { "aria-pressed": String(W.view === v), onclick: () => change(w => { w.view = v; }) }, l)))),
+    resetCard());
   return h("div", { class: "quick" }, main, side);
 }
 function fmtClock(ms) { const sec = Math.max(0, Math.ceil(ms / 1000)); return Math.floor(sec / 60) + ":" + String(sec % 60).padStart(2, "0"); }

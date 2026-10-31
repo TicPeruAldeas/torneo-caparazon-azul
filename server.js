@@ -48,6 +48,14 @@ try {
     save();
     console.log(`Restauradas ${added} de ${restore.picks.length} reservas (${restore.id})`);
   }
+  // Reinicio del torneo (resultados en cero), una vez por id; conserva jugadores y, si se pide, los números del sorteo
+  for (const r of restore.resets || []) {
+    if (!r.id || state.restored.includes(r.id)) continue;
+    state.tournament = { ...emptyTournament(), numbers: r.keepNumbers ? { ...(state.tournament?.numbers || {}) } : {} };
+    state.restored.push(r.id);
+    save();
+    console.log(`Torneo reiniciado (${r.id})${r.keepNumbers ? ", números conservados" : ""}`);
+  }
   // Cambios de personaje para quien ya reservó (p. ej. un personaje que se quitó), una vez por id
   for (const m of restore.moves || []) {
     if (!m.id || state.restored.includes(m.id) || !CHAR_BY_ID[m.to]) continue;
