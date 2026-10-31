@@ -182,6 +182,29 @@
   #fs.hide { opacity: 0; pointer-events: none; }
   #fs:focus-visible { outline: 4px solid #fff; outline-offset: 2px; }
 
+  /* Calendario de parejas */
+  .cal { flex: 1; display: grid; grid-template-columns: 1fr 1fr; grid-auto-flow: column; grid-template-rows: repeat(7, minmax(0, 1fr)); gap: 12px 22px; }
+  .cm { display: grid; grid-template-columns: 64px minmax(0, 1fr) 52px minmax(0, 1fr) 132px; align-items: center; gap: 12px; padding: 6px 12px 6px 8px;
+    background: var(--card); border: 3px solid var(--ink); border-radius: 14px; box-shadow: 0 4px 0 var(--ink); min-height: 0; }
+  .cm.now { background: linear-gradient(180deg, #FFE45C, var(--yellow)); box-shadow: 0 4px 0 var(--ink), 0 0 0 4px #fff; }
+  .cm.done { background: #EEF6EE; }
+  .cm .mn { justify-self: center; width: 54px; height: 54px; border-radius: 12px; display: grid; place-items: center; font-family: var(--display); font-size: 28px; color: #fff;
+    background: var(--blue); border: 3px solid var(--ink); -webkit-text-stroke: 1px var(--ink); paint-order: stroke fill; }
+  .cm.now .mn { background: var(--red); }
+  .cm .vsm { text-align: center; font-family: var(--display); font-size: 26px; color: var(--yellow); -webkit-text-stroke: 2px var(--ink); paint-order: stroke fill; }
+  .cp { display: grid; gap: 4px; min-width: 0; padding: 4px 8px; border-radius: 10px; }
+  .cp.win { background: var(--yellow); border: 2px solid var(--ink); }
+  .cm.now .cp.win { background: #fff; }
+  .cpl { display: grid; grid-template-columns: calc(34px * var(--k)) minmax(0, 1fr); gap: 8px; align-items: center; min-width: 0; }
+  .cpl .av { width: calc(34px * var(--k)); height: calc(34px * var(--k)); border-radius: 8px; font-size: 13px; }
+  .cpl b { font-size: calc(24px * var(--k)); font-weight: 800; line-height: 1.05; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cp.r .cpl { grid-template-columns: minmax(0, 1fr) calc(34px * var(--k)); text-align: right; }
+  .cp.r .cpl .av { order: 2; }
+  .cst { justify-self: end; text-align: center; font-family: var(--display); font-size: 20px; padding: 4px 10px; border-radius: 10px; border: 2px solid var(--ink); background: #fff; color: var(--muted); white-space: nowrap; }
+  .cst.ok { background: var(--green); color: #fff; -webkit-text-stroke: 1px var(--ink); paint-order: stroke fill; }
+  .cst.now { background: var(--red); color: #fff; -webkit-text-stroke: 1px var(--ink); paint-order: stroke fill; }
+  .cst.score { font-size: 30px; background: var(--ink); color: var(--yellow); }
+
   @media (prefers-reduced-motion: reduce) { .view, .row { animation: none; transition: none; } .live i { animation: none; } }
 </style>
 </head>
@@ -376,9 +399,32 @@ function viewMatch() {
     nx ? h("div", { class: "next" }, "Siguiente: ", h("b", {}, `Partida ${i + 2} · ${pairNames(nx[0])} vs ${pairNames(nx[1])}`)) : h("div", { class: "next" }, "Última partida de este juego"));
 }
 
+function viewSchedule() {
+  const t = S.tournament, g = t.current.game === "smash" ? "mk" : t.current.game, cur = t.current.game === g ? t.current.match : -1;
+  const done = C.progress[g];
+  const cards = T.SCHEDULE.map(([A, B], i) => {
+    const mk = g === "mk" ? T.mkMatch(t, i) : null, tn = g === "tennis" ? T.tennisMatch(t, i) : null;
+    const complete = mk ? mk.complete : tn.complete;
+    const winner = mk ? mk.bonus : tn.winner;
+    let st;
+    if (tn && tn.complete) st = h("span", { class: "cst score" }, `${tn.a}-${tn.b}`);
+    else if (complete) st = h("span", { class: "cst ok" }, "Jugada");
+    else if (i === cur) st = h("span", { class: "cst now" }, "Ahora");
+    else st = h("span", { class: "cst" }, "Pendiente");
+    const side = (pair, s, right) => h("div", { class: "cp" + (right ? " r" : "") + (winner === s ? " win" : "") },
+      pair.map(n => h("div", { class: "cpl" }, av(P[n]), h("b", {}, P[n].name))));
+    return h("div", { class: "cm" + (i === cur ? " now" : "") + (complete ? " done" : "") },
+      h("span", { class: "mn" }, i + 1), side(A, "A"), h("span", { class: "vsm" }, "VS"), side(B, "B", true), st);
+  });
+  return h("section", { class: "view" },
+    h("div", { class: "vhead" }, h("span", { class: "tag", style: `--g:var(--${g})` }, `${done}/13`), h("h2", {}, "Calendario de parejas"),
+      h("p", {}, `${T.GAME_NAMES[g]} · 4 partidas cada uno · nunca repite compañero`)),
+    h("div", { class: "cal" }, cards));
+}
+
 function rotation() {
   const g = S.tournament.current.game;
-  return g === "smash" ? ["general", "smash"] : ["general", g, "partida"];
+  return g === "smash" ? ["general", "smash"] : ["general", g, "partida", "calendario"];
 }
 function currentView() {
   const v = S.tournament.view;
@@ -423,7 +469,7 @@ function draw(force) {
   const old = main.querySelector(".board");
   const oldPos = {};
   if (old && view === lastView) old.querySelectorAll(".row").forEach(r => oldPos[r.dataset.num] = r.style.transform);
-  const el = view === "general" ? viewGeneral() : view === "partida" ? viewMatch() : view === "smash" ? viewSmash() : viewGame(view);
+  const el = view === "general" ? viewGeneral() : view === "partida" ? viewMatch() : view === "smash" ? viewSmash() : view === "calendario" ? viewSchedule() : viewGame(view);
   if (view === lastView && !force) el.style.animation = "none";
   main.replaceChildren(el);
   // Reordenamiento animado: arranca en la posición anterior

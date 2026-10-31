@@ -90,7 +90,7 @@ function publicState() {
 // Torneo de la tarde: números del sorteo, resultados de los 3 juegos y qué se ve en la transmisión
 const MATCHES = 13, PLAYERS = 13;
 const SMASH_STAGES = ["campeon", "sub", "tercero", "cuarto", "cuartos", "primera"];
-const VIEWS = ["auto", "general", "mk", "tennis", "smash", "partida"];
+const VIEWS = ["auto", "general", "mk", "tennis", "smash", "partida", "calendario"];
 const GAMES = ["mk", "tennis", "smash"];
 function emptyTournament() {
   return { numbers: {}, mk: {}, tennis: {}, smash: {}, tb: { mk: {}, tennis: {} }, view: "auto", current: { game: "mk", match: 0 } };

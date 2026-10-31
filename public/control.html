@@ -202,7 +202,7 @@ function opts(sel, values, labelFn) {
 /* ---------- Transmisión ---------- */
 function tabTx() {
   const C = T.compute({ ...S, tournament: W });
-  const views = [["auto", "Automático (rota cada 15 s)"], ["general", "Tabla general"], ["mk", "Ranking Mario Kart"], ["tennis", "Ranking Tennis"], ["smash", "Smash"], ["partida", "Partida actual"]];
+  const views = [["auto", "Automático (rota cada 15 s)"], ["general", "Tabla general"], ["mk", "Ranking Mario Kart"], ["tennis", "Ranking Tennis"], ["smash", "Smash"], ["partida", "Partida actual"], ["calendario", "Calendario de parejas"]];
   const g = W.current.game, i = W.current.match;
   const [A, B] = T.SCHEDULE[i];
   return h("div", { class: "grid cols-2" },
