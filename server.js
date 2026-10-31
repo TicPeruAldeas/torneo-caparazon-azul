@@ -83,17 +83,18 @@ function publicState() {
   return {
     media,
     picks: state.picks.map(({ token, ...p }) => p),
-    tournament: state.tournament || emptyTournament()
+    tournament: state.tournament || emptyTournament(),
+    now: Date.now()
   };
 }
 
 // Torneo de la tarde: números del sorteo, resultados de los 3 juegos y qué se ve en la transmisión
 const MATCHES = 13, PLAYERS = 13;
 const SMASH_STAGES = ["campeon", "sub", "tercero", "cuarto", "cuartos", "primera"];
-const VIEWS = ["auto", "general", "mk", "tennis", "smash", "partida", "calendario"];
+const VIEWS = ["auto", "general", "mk", "tennis", "smash", "partida", "calendario", "podio"];
 const GAMES = ["mk", "tennis", "smash"];
 function emptyTournament() {
-  return { numbers: {}, mk: {}, tennis: {}, smash: {}, tb: { mk: {}, tennis: {} }, view: "auto", current: { game: "mk", match: 0 } };
+  return { numbers: {}, mk: {}, tennis: {}, smash: {}, tb: { mk: {}, tennis: {} }, view: "auto", current: { game: "mk", match: 0 }, countdown: { until: 0 } };
 }
 const intIn = (v, lo, hi) => Number.isInteger(v) && v >= lo && v <= hi;
 const obj = v => (v && typeof v === "object" && !Array.isArray(v)) ? v : {};
@@ -120,6 +121,12 @@ function sanitizeTournament(input) {
   const cur = obj(t.current);
   if (GAMES.includes(cur.game)) out.current.game = cur.game;
   if (intIn(cur.match, 0, MATCHES - 1)) out.current.match = cur.match;
+  // Cuenta regresiva con la hora del servidor: countdownSeconds la inicia (0 la cancela); si no, se conserva
+  if (intIn(t.countdownSeconds, 0, 3600)) out.countdown.until = t.countdownSeconds ? Date.now() + t.countdownSeconds * 1000 : 0;
+  else {
+    const until = obj(t.countdown).until;
+    if (Number.isInteger(until) && until >= 0 && until <= Date.now() + 3600 * 1000) out.countdown.until = until;
+  }
   return out;
 }
 
@@ -197,6 +204,7 @@ app.put("/api/admin/tournament", requireAdmin, (req, res) => {
 
 app.get("/marcador", (req, res) => res.sendFile(path.join(__dirname, "public", "marcador.html")));
 app.get("/control", (req, res) => res.sendFile(path.join(__dirname, "public", "control.html")));
+app.get("/resultados", (req, res) => res.sendFile(path.join(__dirname, "public", "resultados.html")));
 
 function removeMediaFile(charId) {
   const old = state.media[charId];

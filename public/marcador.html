@@ -205,6 +205,63 @@
   .cst.now { background: var(--red); color: #fff; -webkit-text-stroke: 1px var(--ink); paint-order: stroke fill; }
   .cst.score { font-size: 30px; background: var(--ink); color: var(--yellow); }
 
+  /* JUEGA / SIGUE en la tabla */
+  .deck { font-family: var(--display); font-size: calc(17px * var(--k)); padding: 0 8px; border-radius: 8px; border: 2px solid var(--ink); color: #fff; -webkit-text-stroke: 1px var(--ink); paint-order: stroke fill; white-space: nowrap; }
+  .deck.play { background: var(--red); animation: pulse 1.2s ease-in-out infinite; }
+  .deck.next { background: var(--blue); }
+  @keyframes pulse { 50% { transform: scale(1.08); } }
+
+  /* Podio */
+  .podium { flex: 1; display: grid; grid-template-columns: 1fr 1.15fr 1fr; gap: 26px; align-items: end; padding: 0 40px; }
+  .step { display: grid; justify-items: center; gap: 10px; text-align: center; min-width: 0; }
+  .step .av { width: 180px; height: 180px; border-radius: 22px; border-width: 4px; box-shadow: 0 6px 0 var(--ink); }
+  .step.p1 .av { width: 230px; height: 230px; }
+  .step b { font-size: 50px; font-weight: 800; line-height: 1; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .step .ch { font-size: 24px; font-weight: 700; color: var(--ink); background: rgba(255,255,255,.85); border: 2px solid var(--ink); border-radius: 10px; padding: 2px 10px; display: flex; gap: 8px; align-items: center; }
+  .block { width: 100%; display: grid; place-items: center; gap: 4px; border: 4px solid var(--ink); border-radius: 18px 18px 0 0; box-shadow: 0 6px 0 var(--ink); padding: 14px 0; }
+  .block .place { font-family: var(--display); font-size: 68px; line-height: 1; color: #fff; -webkit-text-stroke: 4px var(--ink); paint-order: stroke fill; }
+  .block .pts { font-family: var(--display); font-size: 34px; background: var(--ink); color: var(--yellow); border-radius: 10px; padding: 0 14px; }
+  .p1 .block { height: 200px; background: linear-gradient(180deg, #FFE45C, var(--yellow)); }
+  .p2 .block { height: 150px; background: var(--silver); }
+  .p3 .block { height: 115px; background: var(--bronze); }
+  .p1 .crownbig { font-size: 70px; line-height: .8; color: var(--yellow); -webkit-text-stroke: 3px var(--ink); paint-order: stroke fill; text-shadow: 0 5px 0 var(--ink); }
+  .rest { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 14px 0 18px; }
+  .rest span { font-size: 24px; font-weight: 800; background: #fff; border: 3px solid var(--ink); border-radius: 12px; padding: 2px 12px; box-shadow: 0 3px 0 var(--ink); }
+  .rest span em { font-style: normal; color: var(--muted); margin-right: 6px; }
+
+  /* Cuenta regresiva */
+  .count { flex: 1; display: grid; grid-template-rows: auto 1fr auto; justify-items: center; align-items: center; gap: 10px; }
+  .timer { font-family: var(--display); font-size: 300px; line-height: .9; color: #fff; -webkit-text-stroke: 10px var(--ink); paint-order: stroke fill; text-shadow: 0 14px 0 var(--ink); font-variant-numeric: tabular-nums; }
+  .timer.hot { color: var(--yellow); animation: pulse .5s ease-in-out infinite; }
+  .timer.go { color: var(--green); font-size: 220px; }
+  .count .pairs { display: grid; grid-template-columns: 1fr auto 1fr; gap: 30px; align-items: center; width: 100%; }
+  .mini { display: flex; gap: 18px; justify-content: center; background: #fff; border: 4px solid var(--ink); border-radius: 22px; box-shadow: 0 6px 0 var(--ink); padding: 18px; }
+  .mini .pc .av { width: 150px; height: 150px; }
+  .mini .pc b { font-size: 36px; }
+  .mini .pc span { font-size: 20px; }
+
+  /* Celebración */
+  #celebrate { position: absolute; inset: 0; z-index: 4; display: grid; place-items: center; background: rgba(27,26,46,.55); overflow: hidden; }
+  #celebrate .card { position: relative; z-index: 2; display: grid; justify-items: center; gap: 18px; text-align: center; padding: 36px 60px 40px; border-radius: 30px;
+    background: linear-gradient(180deg, #FFE45C, var(--yellow)); border: 6px solid var(--ink); box-shadow: 0 12px 0 var(--ink); animation: pop .6s cubic-bezier(.2,1.6,.4,1); }
+  #celebrate h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 92px; line-height: 1; color: #fff; -webkit-text-stroke: 6px var(--ink); paint-order: stroke fill; text-shadow: 0 8px 0 var(--ink); }
+  #celebrate .sub { font-family: var(--display); font-size: 34px; background: var(--red); color: #fff; border: 4px solid var(--ink); border-radius: 14px; padding: 2px 18px; -webkit-text-stroke: 1.5px var(--ink); paint-order: stroke fill; }
+  #celebrate .cwho { display: flex; gap: 30px; justify-content: center; }
+  #celebrate .pc .av { width: 210px; height: 210px; }
+  #celebrate .pc b { font-size: 48px; }
+  #celebrate .pc span { color: #5A4300; }
+  #celebrate .extra { font-size: 30px; font-weight: 800; }
+  @keyframes pop { from { transform: scale(.3) rotate(-6deg); opacity: 0; } to { transform: none; opacity: 1; } }
+  .coin { position: absolute; top: -80px; width: 54px; height: 70px; border-radius: 50%; z-index: 1; background: radial-gradient(circle at 35% 30%, #FFF3A0, var(--yellow) 45%, var(--yellow-dk));
+    border: 4px solid var(--ink); animation: fall linear forwards, spin .5s linear infinite; }
+  .coin::after { content: ""; position: absolute; left: 50%; top: 18%; bottom: 18%; width: 8px; margin-left: -4px; border-radius: 4px; background: var(--yellow-dk); }
+  @keyframes fall { to { transform: translateY(1500px); } }
+  @keyframes spin { 50% { scale: .25 1; } }
+
+  #snd { position: fixed; right: max(16px, env(safe-area-inset-right)); bottom: calc(max(16px, env(safe-area-inset-bottom)) + 64px); z-index: 5; font: 800 18px var(--cond);
+    padding: 10px 16px; border-radius: 14px; border: 3px solid var(--ink); background: #fff; color: var(--ink); box-shadow: 0 4px 0 var(--ink); cursor: pointer; transition: opacity .4s; }
+  #snd.hide { opacity: 0; pointer-events: none; }
+
   @media (prefers-reduced-motion: reduce) { .view, .row { animation: none; transition: none; } .live i { animation: none; } }
 </style>
 </head>
@@ -230,6 +287,7 @@
   </header>
   <div class="flag"></div>
   <main id="main"></main>
+  <div id="celebrate" hidden></div>
   <footer class="ticker">
     <span class="lab" id="tick-lab">SIGUE</span>
     <span class="txt" id="tick-txt">Cargando el torneo…</span>
@@ -237,6 +295,7 @@
   </footer>
 </div>
 <button id="fs" type="button">Pantalla completa</button>
+<button id="snd" type="button">Sonido</button>
 
 <script src="/torneo.js"></script>
 <script>
@@ -273,7 +332,7 @@ function fit() {
 }
 addEventListener("resize", fit);
 
-let S = null, C = null, CH = null, P = null;
+let S = null, C = null, CH = null, P = null, DECK = { playing: new Set(), next: new Set() };
 fit();
 let prevRank = {}, deltas = {}, lastView = null, rotIdx = 0, rotTimer = null;
 const ROT_MS = 15000;
@@ -307,6 +366,12 @@ function board(kind, order, cells) {
   return wrap;
 }
 
+function deckChip(n) {
+  if (DECK.playing.has(n)) return h("span", { class: "deck play" }, "JUEGA");
+  if (DECK.next.has(n)) return h("span", { class: "deck next" }, "SIGUE");
+  return null;
+}
+
 function viewGeneral() {
   const order = C.generalOrder;
   const started = C.progress.mk + C.progress.tennis + C.progress.smash > 0;
@@ -322,7 +387,7 @@ function viewGeneral() {
       h("span", { class: "pos" }, started ? r : "–", d ? h("span", { class: "delta " + (d > 0 ? "up" : "down") }, (d > 0 ? "▲" : "▼") + Math.abs(d)) : null),
       av(p),
       h("span", { class: "who" }, h("b", {}, p.name), h("span", {}, h("span", { class: "num" }, "#" + n), dots(p), charName(p)),
-        started && r === 1 ? h("span", { class: "crown" }, "★") : null),
+        started && r === 1 ? h("span", { class: "crown" }, "★") : null, deckChip(n)),
       h("span", { class: "cell" + (C.mk[n].gp == null ? " dim" : "") }, T.fmt(C.mk[n].gp)),
       h("span", { class: "cell" + (C.tennis[n].gp == null ? " dim" : "") }, T.fmt(C.tennis[n].gp)),
       h("span", { class: "cell" + (C.smash[n].gp == null ? " dim" : "") }, T.fmt(C.smash[n].gp)),
@@ -344,7 +409,7 @@ function viewGame(g) {
     return h("div", { class: "row" + (r && r <= 3 ? " r" + r : "") },
       h("span", { class: "pos" }, r ? (s.tied ? r + "=" : r) : "–"),
       av(p),
-      h("span", { class: "who" }, h("b", {}, p.name), h("span", {}, h("span", { class: "num" }, "#" + n), dots(p), charName(p))),
+      h("span", { class: "who" }, h("b", {}, p.name), h("span", {}, h("span", { class: "num" }, "#" + n), dots(p), charName(p)), g === S.tournament.current.game ? deckChip(n) : null),
       h("span", { class: "cell" }, `${s.played}/4`),
       h("span", { class: "cell" }, g === "mk" ? s.firsts : s.wins),
       h("span", { class: "cell" }, s.pts),
@@ -422,11 +487,57 @@ function viewSchedule() {
     h("div", { class: "cal" }, cards));
 }
 
+function allDone() { return C.progress.mk === 13 && C.progress.tennis === 13 && C.progress.smash === 13; }
+
+function viewPodium() {
+  const order = C.generalOrder, done = allDone();
+  const step = (idx, cls) => {
+    const n = order[idx];
+    if (n == null) return h("div");
+    const p = P[n];
+    return h("div", { class: "step " + cls },
+      cls === "p1" ? h("span", { class: "crownbig" }, "★") : null,
+      av(p), h("b", {}, p.name), h("span", { class: "ch" }, dots(p), charName(p)),
+      h("div", { class: "block" }, h("span", { class: "place" }, C.generalRank[n] + "º"), h("span", { class: "pts" }, T.fmt(C.total[n]) + " pts")));
+  };
+  return h("section", { class: "view" },
+    h("div", { class: "vhead" }, h("span", { class: "tag", style: "--g:var(--red)" }, done ? "FINAL" : "PARCIAL"), h("h2", {}, done ? "¡Campeón de la tarde!" : "Podio por ahora"),
+      h("p", {}, done ? "Gracias por jugar el Torneo Caparazón Azul" : `Kart ${C.progress.mk}/13 · Tennis ${C.progress.tennis}/13 · Smash ${C.progress.smash}/13`)),
+    h("div", { class: "podium" }, step(1, "p2"), step(0, "p1"), step(2, "p3")),
+    h("div", { class: "rest" }, order.slice(3).map(n => h("span", {}, h("em", {}, C.generalRank[n] + "."), `${P[n].name} · ${T.fmt(C.total[n])}`))));
+}
+
+function countdownLeft() {
+  const until = S?.tournament?.countdown?.until || 0;
+  return until ? until - T.serverNow() : -Infinity;
+}
+function fmtClock(ms) {
+  const sec = Math.max(0, Math.ceil(ms / 1000));
+  return Math.floor(sec / 60) + ":" + String(sec % 60).padStart(2, "0");
+}
+function viewCountdown() {
+  const t = S.tournament, g = t.current.game, i = t.current.match;
+  const left = countdownLeft();
+  const timer = h("div", { class: "timer", id: "timer" }, left > 0 ? fmtClock(left) : "¡A jugar!");
+  let pairs = null;
+  if (g !== "smash") {
+    const [A, B] = T.SCHEDULE[i];
+    const card = n => h("div", { class: "pc" }, av(P[n]), h("b", {}, P[n].name), h("span", {}, dots(P[n]), charName(P[n])));
+    pairs = h("div", { class: "pairs" }, h("div", { class: "mini" }, card(A[0]), card(A[1])), h("div", { class: "vs" }, h("div", { class: "big" }, "VS")), h("div", { class: "mini" }, card(B[0]), card(B[1])));
+  }
+  return h("section", { class: "view" },
+    h("div", { class: "vhead" }, h("span", { class: "tag", style: `--g:var(--${g})` }, T.GAME_SHORT[g]), h("h2", {}, g === "smash" ? "Smash Bros. empieza en" : `Partida ${i + 1} empieza en`),
+      h("p", {}, "¡Jugadores a sus controles!")),
+    h("div", { class: "count" }, timer, pairs));
+}
+
 function rotation() {
   const g = S.tournament.current.game;
-  return g === "smash" ? ["general", "smash"] : ["general", g, "partida", "calendario"];
+  const base = g === "smash" ? ["general", "smash"] : ["general", g, "partida", "calendario"];
+  return allDone() ? ["podio", "general", ...base.slice(1)] : base;
 }
 function currentView() {
+  if (countdownLeft() > -4000) return "cuenta";
   const v = S.tournament.view;
   if (v !== "auto") return v;
   const rot = rotation();
@@ -447,7 +558,7 @@ function ticker() {
 
 function draw(force) {
   if (!S || !CH) return;
-  C = T.compute(S); P = T.playersByNum(S);
+  C = T.compute(S); P = T.playersByNum(S); DECK = T.onDeck(S.tournament);
   // Flechas de cambio en la general (se guardan 25 s)
   const started = C.progress.mk + C.progress.tennis + C.progress.smash > 0;
   if (started) {
@@ -469,7 +580,8 @@ function draw(force) {
   const old = main.querySelector(".board");
   const oldPos = {};
   if (old && view === lastView) old.querySelectorAll(".row").forEach(r => oldPos[r.dataset.num] = r.style.transform);
-  const el = view === "general" ? viewGeneral() : view === "partida" ? viewMatch() : view === "smash" ? viewSmash() : view === "calendario" ? viewSchedule() : viewGame(view);
+  const el = view === "general" ? viewGeneral() : view === "partida" ? viewMatch() : view === "smash" ? viewSmash() : view === "calendario" ? viewSchedule()
+    : view === "podio" ? viewPodium() : view === "cuenta" ? viewCountdown() : viewGame(view);
   if (view === lastView && !force) el.style.animation = "none";
   main.replaceChildren(el);
   // Reordenamiento animado: arranca en la posición anterior
@@ -511,9 +623,104 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
 addEventListener("pointerdown", keepAwake, { once: true });
 keepAwake();
 
+// Sonidos estilo 8 bits, generados en el navegador (sin archivos)
+let soundOn = true;
+try { soundOn = localStorage.getItem("marcador-sonido") !== "no"; } catch {}
+let actx = null;
+function audio() {
+  if (!soundOn) return null;
+  try { actx ||= new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === "suspended") actx.resume(); } catch { return null; }
+  return actx;
+}
+function tone(freq, start, dur, type = "square", vol = .12) {
+  const a = audio(); if (!a) return;
+  const o = a.createOscillator(), g = a.createGain();
+  o.type = type; o.frequency.value = freq;
+  g.gain.setValueAtTime(vol, a.currentTime + start);
+  g.gain.exponentialRampToValueAtTime(.0001, a.currentTime + start + dur);
+  o.connect(g).connect(a.destination);
+  o.start(a.currentTime + start); o.stop(a.currentTime + start + dur + .02);
+}
+const SFX = {
+  coin() { tone(988, 0, .08); tone(1319, .08, .35); },
+  beep() { tone(880, 0, .12, "square", .1); },
+  go() { tone(1760, 0, .5, "square", .12); },
+  fanfare() { [523, 659, 784, 1047, 784, 1047].forEach((f, i) => tone(f, i * .12, i === 5 ? .6 : .14)); }
+};
+const sndBtn = $("snd");
+function paintSnd() { sndBtn.textContent = soundOn ? "Sonido: activado" : "Sonido: apagado"; }
+sndBtn.addEventListener("click", () => { soundOn = !soundOn; try { localStorage.setItem("marcador-sonido", soundOn ? "si" : "no"); } catch {} paintSnd(); if (soundOn) SFX.coin(); });
+paintSnd();
+addEventListener("pointerdown", () => { audio(); sndBtn.classList.remove("hide"); clearTimeout(sndBtn.t); sndBtn.t = setTimeout(() => sndBtn.classList.add("hide"), 4000); });
+sndBtn.t = setTimeout(() => sndBtn.classList.add("hide"), 4000);
+
+// Reloj de la cuenta regresiva: solo actualiza el número; al terminar vuelve a la vista normal
+let lastSec = null, cdActive = false;
+setInterval(() => {
+  if (!S) return;
+  const left = countdownLeft(), active = left > -4000;
+  if (active !== cdActive) { cdActive = active; lastSec = null; draw(true); return; }
+  if (!active) return;
+  const el = $("timer"); if (!el) return;
+  const sec = Math.ceil(left / 1000);
+  if (sec === lastSec) return;
+  lastSec = sec;
+  el.textContent = left > 0 ? fmtClock(left) : "¡A jugar!";
+  el.className = "timer" + (left <= 0 ? " go" : sec <= 10 ? " hot" : "");
+  if (sec > 0 && sec <= 3) SFX.beep();
+  if (sec === 0) SFX.go();
+}, 200);
+
+// Celebración cuando se completa una partida o hay campeón de Smash
+let seen = null, queue = [], showing = false;
+function completions(state) {
+  const t = state.tournament, out = new Map();
+  T.SCHEDULE.forEach((_, i) => {
+    if (T.mkMatch(t, i).complete) out.set("mk:" + i, { g: "mk", i });
+    if (T.tennisMatch(t, i).complete) out.set("tennis:" + i, { g: "tennis", i });
+  });
+  for (const [n, st] of Object.entries(t.smash || {})) if (st === "campeon") out.set("smash:" + n, { g: "smash", n: +n });
+  return out;
+}
+function celebrate(ev) {
+  const t = S.tournament, box = $("celebrate");
+  const card = n => h("div", { class: "pc" }, av(P[n]), h("b", {}, P[n].name), h("span", {}, dots(P[n]), charName(P[n])));
+  let title, sub, who, extra = null;
+  if (ev.g === "smash") { title = "¡Campeón de Smash!"; sub = "+13 pts generales"; who = [ev.n]; }
+  else if (ev.g === "mk") {
+    const m = T.mkMatch(t, ev.i), [A, B] = T.SCHEDULE[ev.i];
+    title = `Partida ${ev.i + 1}`;
+    if (m.bonus) { who = m.bonus === "A" ? A : B; sub = "¡+3 de bono!"; extra = `${m.sumA} vs ${m.sumB} puntos`; }
+    else { const first = [...A, ...B].sort((a, b) => m.res[a] - m.res[b])[0]; who = [first]; sub = "¡Empate de parejas!"; extra = `Mejor puesto: ${m.res[first]}.º`; }
+  } else {
+    const m = T.tennisMatch(t, ev.i), [A, B] = T.SCHEDULE[ev.i];
+    title = `Partida ${ev.i + 1}`; who = m.winner === "A" ? A : B; sub = `¡Ganan ${m.a}-${m.b}!`;
+  }
+  const coins = Array.from({ length: 26 }, () => {
+    const c = h("i", { class: "coin" });
+    c.style.left = Math.random() * 100 + "%";
+    c.style.animationDuration = (2.2 + Math.random() * 1.8) + "s, .5s";
+    c.style.animationDelay = (Math.random() * 1.2) + "s, 0s";
+    return c;
+  });
+  box.replaceChildren(...coins, h("div", { class: "card" }, h("span", { class: "sub" }, T.GAME_SHORT[ev.g]), h("h2", {}, title),
+    h("span", { class: "sub" }, sub), h("div", { class: "cwho" }, who.map(card)), extra ? h("span", { class: "extra" }, extra) : null));
+  box.hidden = false;
+  SFX.coin(); setTimeout(() => SFX.fanfare(), 250);
+  setTimeout(() => { box.hidden = true; showing = false; if (queue.length) { showing = true; celebrate(queue.shift()); } }, 7000);
+}
+function checkCelebrations(state) {
+  const now = completions(state);
+  if (seen) for (const [k, ev] of now) if (!seen.has(k)) queue.push(ev);
+  seen = new Set(now.keys());
+  if (!showing && queue.length) { showing = true; celebrate(queue.shift()); }
+}
+
 let lastMode = null;
 T.connect((state, chars) => {
   CH = chars; S = state;
+  P = T.playersByNum(S);
+  checkCelebrations(state);
   const mode = state.tournament.view + "|" + state.tournament.current.game;
   if (mode !== lastMode) { rotIdx = 0; startRotation(); }
   draw(mode !== lastMode);

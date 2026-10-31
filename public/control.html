@@ -108,6 +108,16 @@
   .login input { font: inherit; font-size: 16px; padding: 12px; border-radius: 12px; border: 3px solid var(--ink); background: var(--cream); color: var(--ink); }
   .msg { font-size: 14px; } .msg.err { color: var(--err); font-weight: 700; }
   .confirm { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  nav.tabs [data-tab="quick"] { --tc: var(--brick); }
+  .quick { display: grid; gap: 16px; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); align-items: start; }
+  @media (max-width: 860px) { .quick { grid-template-columns: minmax(0, 1fr); } }
+  .bignav { display: flex; gap: 10px; flex-wrap: wrap; }
+  .bignav .btn { font-size: 17px; padding: 12px 18px; }
+  .cdbox { display: grid; gap: 10px; }
+  .cdclock { font-family: var(--display); font-size: 56px; line-height: 1; text-align: center; padding: 10px; border-radius: 14px; border: 3px solid var(--ink); background: var(--cream); font-variant-numeric: tabular-nums; }
+  .cdclock.on { background: var(--yellow); }
+  .copied { font-size: 13px; font-weight: 800; color: var(--ok); }
+  textarea.share { width: 100%; min-height: 160px; font: 13px/1.4 ui-monospace, Consolas, monospace; border: 2px solid var(--ink); border-radius: 10px; padding: 8px; }
 </style>
 </head>
 <body>
@@ -116,7 +126,9 @@
     <h1>Control · <span>Torneo Caparazón Azul</span></h1>
     <span class="status" id="status" role="status" aria-live="polite">Conectando…</span>
     <div class="grow">
+      <button class="btn" id="undo" type="button" disabled>Deshacer</button>
       <a class="btn" href="/marcador" target="_blank" rel="noopener">Abrir marcador</a>
+      <a class="btn" href="/resultados" target="_blank" rel="noopener">Resultados públicos</a>
       <a class="btn" href="/" target="_blank" rel="noopener">Elegir personaje</a>
     </div>
   </header>
@@ -134,6 +146,7 @@
 
   <div id="app" hidden>
     <nav class="tabs" role="tablist" id="tabs">
+      <button data-tab="quick" role="tab">Rápido</button>
       <button data-tab="tx" role="tab">Transmisión</button>
       <button data-tab="players" role="tab">Jugadores</button>
       <button data-tab="mk" role="tab">Mario Kart</button>
@@ -163,19 +176,28 @@ function h(tag, props = {}, ...kids) {
 }
 function ss(k, v) { try { if (v === undefined) return sessionStorage.getItem(k); v == null ? sessionStorage.removeItem(k) : sessionStorage.setItem(k, v); } catch { return null; } }
 
-let S = null, CH = null, W = null, pass = ss("torneo-admin"), tab = "tx", dirty = false, saveTimer = null, confirmDraw = false;
-try { tab = localStorage.getItem("control-tab") || "tx"; } catch {}
+let S = null, CH = null, W = null, pass = ss("torneo-admin"), tab = "quick", dirty = false, saveTimer = null, confirmDraw = false;
+try { tab = localStorage.getItem("control-tab") || "quick"; } catch {}
+let history = [];
 
 function setStatus(text, kind = "") { const s = $("status"); s.textContent = text; s.className = "status " + kind; }
 
 // Guardado: copia local W, se envía completa con pequeña espera
 function change(mut) {
+  history.push(JSON.stringify(W)); if (history.length > 40) history.shift();
   mut(W); dirty = true; setStatus("Guardando…", "saving"); render();
   clearTimeout(saveTimer); saveTimer = setTimeout(save, 350);
 }
+function bodyOnce() { const b = JSON.stringify(W); delete W.countdownSeconds; return b; }
+function paintUndo() { const u = $("undo"); u.disabled = !history.length; u.textContent = history.length ? `Deshacer (${history.length})` : "Deshacer"; }
+$("undo").addEventListener("click", () => {
+  if (!history.length) return;
+  W = JSON.parse(history.pop()); dirty = true; setStatus("Deshecho · guardando…", "saving"); render();
+  clearTimeout(saveTimer); saveTimer = setTimeout(save, 200);
+});
 async function save() {
   try {
-    const res = await fetch("/api/admin/tournament", { method: "PUT", headers: { "Content-Type": "application/json", "x-admin-password": pass }, body: JSON.stringify(W) });
+    const res = await fetch("/api/admin/tournament", { method: "PUT", headers: { "Content-Type": "application/json", "x-admin-password": pass }, body: bodyOnce() });
     const data = await res.json().catch(() => ({}));
     if (res.status === 401) { pass = null; ss("torneo-admin", null); showLogin("La contraseña cambió. Vuelve a entrar."); return; }
     if (!res.ok) throw new Error(data.error);
@@ -199,10 +221,73 @@ function opts(sel, values, labelFn) {
   return values.map(v => { const o = h("option", { value: v }, labelFn ? labelFn(v) : String(v)); if (String(v) === String(sel ?? "")) o.selected = true; return o; });
 }
 
+/* ---------- Rápido: la partida en pantalla, siguiente y cuenta regresiva ---------- */
+function nextPending(g, from) {
+  for (let k = from + 1; k < 13; k++) if (!T.matchDone(W, g, k)) return k;
+  return Math.min(from + 1, 12);
+}
+function tabQuick() {
+  const g = W.current.game, i = W.current.match;
+  const done = g !== "smash" && T.matchDone(W, g, i);
+  const startCd = sec => change(w => { w.countdownSeconds = sec; w.countdown = { until: sec ? T.serverNow() + sec * 1000 : 0 }; });
+  const goNext = (sec) => change(w => { w.current.match = nextPending(g, i); if (sec) { w.countdownSeconds = sec; w.countdown = { until: T.serverNow() + sec * 1000 }; } });
+  const left = (W.countdown?.until || 0) - T.serverNow();
+  const main = h("div", { class: "grid" },
+    h("div", { class: "card" },
+      h("div", { class: "label" }, "Juego en curso"),
+      h("div", { class: "seg" }, ["mk", "tennis", "smash"].map(x => h("button", { "aria-pressed": String(g === x), onclick: () => change(w => { w.current.game = x; }) }, T.GAME_NAMES[x])))),
+    g === "smash" ? tabSmash() : [
+      g === "mk" ? mkCard(i) : tennisCard(i),
+      h("div", { class: "bignav" },
+        h("button", { class: "btn", disabled: i === 0, onclick: () => change(w => { w.current.match = i - 1; }) }, "◀ Anterior"),
+        h("button", { class: "btn primary", disabled: i === 12, onclick: () => goNext(0) }, done ? "Siguiente partida ▶" : "Saltar a la siguiente ▶"),
+        h("button", { class: "btn primary", disabled: i === 12 || !done, onclick: () => goNext(120) }, "Siguiente + cuenta de 2 min"))
+    ]);
+  const side = h("div", { class: "grid" },
+    h("div", { class: "card cdbox" },
+      h("h2", {}, "Cuenta regresiva"),
+      h("p", { class: "lead", style: "margin:0" }, "Aparece en la TV en grande con las parejas de la partida en pantalla, y suena al final."),
+      h("div", { class: "cdclock" + (left > 0 ? " on" : ""), id: "cdclock" }, left > 0 ? fmtClock(left) : "—"),
+      h("div", { class: "seg" }, [60, 120, 180, 300].map(sec => h("button", { onclick: () => startCd(sec) }, `${sec / 60} min`)),
+        h("button", { disabled: !(left > 0), onclick: () => startCd(0) }, "Cancelar"))),
+    h("div", { class: "card" },
+      h("div", { class: "label" }, "¿Qué se ve en la TV?"),
+      h("div", { class: "seg" }, VIEWS.map(([v, l]) => h("button", { "aria-pressed": String(W.view === v), onclick: () => change(w => { w.view = v; }) }, l)))));
+  return h("div", { class: "quick" }, main, side);
+}
+function fmtClock(ms) { const sec = Math.max(0, Math.ceil(ms / 1000)); return Math.floor(sec / 60) + ":" + String(sec % 60).padStart(2, "0"); }
+setInterval(() => {
+  const el = $("cdclock"); if (!el || !W) return;
+  const left = (W.countdown?.until || 0) - T.serverNow();
+  el.textContent = left > 0 ? fmtClock(left) : "—"; el.classList.toggle("on", left > 0);
+}, 500);
+const VIEWS = [["auto", "Automático"], ["general", "Tabla general"], ["mk", "Ranking Kart"], ["tennis", "Ranking Tennis"], ["smash", "Smash"], ["partida", "Partida actual"], ["calendario", "Calendario"], ["podio", "Podio"]];
+
+/* ---------- Exportar ---------- */
+let shareText = null;
+function exportCard() {
+  const st = { ...S, tournament: W };
+  return h("div", { class: "card" },
+    h("h2", {}, "Compartir resultados"),
+    h("p", { class: "lead" }, "Descarga la tabla para Excel o copia un resumen listo para pegar en el grupo de WhatsApp."),
+    h("div", { class: "seg" },
+      h("button", { onclick: () => {
+        const blob = new Blob([T.toCsv(st)], { type: "text/csv;charset=utf-8" });
+        const a = h("a", { href: URL.createObjectURL(blob), download: "torneo-caparazon-azul.csv" });
+        document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+      } }, "Descargar Excel (CSV)"),
+      h("button", { onclick: async e => {
+        const text = T.summaryText(st);
+        try { await navigator.clipboard.writeText(text); e.target.textContent = "¡Copiado!"; setTimeout(() => { e.target.textContent = "Copiar resumen para WhatsApp"; }, 2000); }
+        catch { shareText = text; render(); }
+      } }, "Copiar resumen para WhatsApp")),
+    shareText ? h("textarea", { class: "share", readonly: true, "aria-label": "Resumen para copiar" }, shareText) : null);
+}
+
 /* ---------- Transmisión ---------- */
 function tabTx() {
   const C = T.compute({ ...S, tournament: W });
-  const views = [["auto", "Automático (rota cada 15 s)"], ["general", "Tabla general"], ["mk", "Ranking Mario Kart"], ["tennis", "Ranking Tennis"], ["smash", "Smash"], ["partida", "Partida actual"], ["calendario", "Calendario de parejas"]];
+  const views = [["auto", "Automático (rota cada 15 s)"], ["general", "Tabla general"], ["mk", "Ranking Mario Kart"], ["tennis", "Ranking Tennis"], ["smash", "Smash"], ["partida", "Partida actual"], ["calendario", "Calendario de parejas"], ["podio", "Podio"]];
   const g = W.current.game, i = W.current.match;
   const [A, B] = T.SCHEDULE[i];
   return h("div", { class: "grid cols-2" },
@@ -229,7 +314,8 @@ function tabTx() {
         h("tbody", {}, C.generalOrder.map(n => h("tr", {},
           h("td", {}, C.generalRank[n]), h("td", {}, player(n).name),
           h("td", { class: "n" }, T.fmt(C.mk[n].gp)), h("td", { class: "n" }, T.fmt(C.tennis[n].gp)), h("td", { class: "n" }, T.fmt(C.smash[n].gp)),
-          h("td", { class: "n" }, T.fmt(C.total[n]))))))))
+          h("td", { class: "n" }, T.fmt(C.total[n])))))))),
+    exportCard()
   );
 }
 function pairNames(pair) { return pair.map(n => player(n).name).join(" y "); }
@@ -284,7 +370,12 @@ function tabMk() {
   const C = T.compute({ ...S, tournament: W });
   return h("div", { class: "grid" },
     h("p", { class: "lead" }, "Anota la posición final (1 a 24) de cada jugador apenas salga la pantalla de resultados. Puntos = 25 − posición; la pareja que sume más gana +3 cada uno (si empatan, no hay bono)."),
-    h("div", { class: "grid cols-2" }, T.SCHEDULE.map(([A, B], k) => {
+    h("div", { class: "grid cols-2" }, T.SCHEDULE.map((_, k) => mkCard(k))),
+    rankTable("mk", C));
+}
+function mkCard(k) {
+  const [A, B] = T.SCHEDULE[k];
+  {
       const m = T.mkMatch(W, k);
       const posList = [...A, ...B].map(n => m.res[n]).filter(Boolean);
       const dup = posList.length !== new Set(posList).size;
@@ -296,8 +387,7 @@ function tabMk() {
       return h("div", { class: "card match" + (W.current.game === "mk" && W.current.match === k ? " cur" : "") },
         matchHead("mk", k, m.complete), side("Pareja A", A, "A"), side("Pareja B", B, "B"),
         dup ? h("span", { class: "warn" }, "Hay dos jugadores con la misma posición.") : null);
-    })),
-    rankTable("mk", C));
+  }
 }
 
 /* ---------- Tennis ---------- */
@@ -305,7 +395,12 @@ function tabTennis() {
   const C = T.compute({ ...S, tournament: W });
   return h("div", { class: "grid" },
     h("p", { class: "lead" }, "Anota los juegos que ganó cada pareja (sets a 3 juegos). Cada integrante suma 1 punto por juego ganado y +3 si su pareja gana el partido."),
-    h("div", { class: "grid cols-2" }, T.SCHEDULE.map(([A, B], k) => {
+    h("div", { class: "grid cols-2" }, T.SCHEDULE.map((_, k) => tennisCard(k))),
+    rankTable("tennis", C));
+}
+function tennisCard(k) {
+  const [A, B] = T.SCHEDULE[k];
+  {
       const m = T.tennisMatch(W, k), r = W.tennis[k] || {};
       const set = (key) => e => change(w => {
         const v = e.target.value === "" ? null : +e.target.value;
@@ -324,8 +419,7 @@ function tabTennis() {
           h("span", { class: "names r" }, pairNames(B))),
         m.complete ? h("span", { class: "status ok" }, `Gana ${pairNames(m.winner === "A" ? A : B)}`) : null,
         invalid ? h("span", { class: "warn" }, "Una pareja debe llegar a 3 juegos para cerrar el partido.") : null);
-    })),
-    rankTable("tennis", C));
+  }
 }
 
 function rankTable(g, C) {
@@ -381,9 +475,10 @@ function render() {
   if (!S || !CH || !W) return;
   for (const b of document.querySelectorAll("#tabs button")) b.setAttribute("aria-selected", String(b.dataset.tab === tab));
   document.querySelector(`#tabs [data-tab="${tab}"]`)?.scrollIntoView({ block: "nearest", inline: "nearest" });
-  const fn = { tx: tabTx, players: tabPlayers, mk: tabMk, tennis: tabTennis, smash: tabSmash, tb: tabTb }[tab] || tabTx;
+  const fn = { quick: tabQuick, tx: tabTx, players: tabPlayers, mk: tabMk, tennis: tabTennis, smash: tabSmash, tb: tabTb }[tab] || tabTx;
   const y = scrollY;
   $("panel").replaceChildren(fn());
+  paintUndo();
   scrollTo(0, y);
 }
 

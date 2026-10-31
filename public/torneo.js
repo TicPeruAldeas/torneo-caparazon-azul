@@ -116,19 +116,79 @@
     return { mk, tennis, smash, total, mkOrder, tennisOrder, generalOrder, generalRank, progress: { mk: mkDone, tennis: tennisDone, smash: smashDone } };
   }
 
-  // Datos en vivo: personajes + estado por SSE
+  const matchDone = (t, g, i) => g === "mk" ? mkMatch(t, i).complete : tennisMatch(t, i).complete;
+
+  // Quién está jugando la partida en pantalla y quién entra en la siguiente
+  function onDeck(t) {
+    const g = t.current?.game, i = t.current?.match ?? 0;
+    const out = { playing: new Set(), next: new Set() };
+    if (g !== "mk" && g !== "tennis") return out;
+    if (!matchDone(t, g, i)) SCHEDULE[i].flat().forEach(n => out.playing.add(n));
+    for (let k = i + 1; k < SCHEDULE.length; k++) {
+      if (!matchDone(t, g, k)) { SCHEDULE[k].flat().forEach(n => out.next.add(n)); break; }
+    }
+    return out;
+  }
+
+  // Próxima partida pendiente de un jugador, empezando por el juego en curso
+  function nextMatchFor(t, num) {
+    const start = t.current?.game === "tennis" ? ["tennis", "mk"] : ["mk", "tennis"];
+    for (const g of start) {
+      for (let i = 0; i < SCHEDULE.length; i++) {
+        const [A, B] = SCHEDULE[i];
+        if (!A.includes(num) && !B.includes(num)) continue;
+        if (matchDone(t, g, i)) continue;
+        const mine = A.includes(num) ? A : B, rivals = mine === A ? B : A;
+        const partner = mine.find(n => n !== num);
+        const isNow = t.current?.game === g && t.current?.match === i;
+        const ahead = t.current?.game === g ? SCHEDULE.slice(t.current.match, i).filter((_, k) => !matchDone(t, g, t.current.match + k)).length : null;
+        return { game: g, match: i, partner, rivals, isNow, ahead };
+      }
+    }
+    return null;
+  }
+
+  // Exportar: CSV para Excel (separador ; y coma decimal) y resumen para WhatsApp
+  function toCsv(state) {
+    const C = compute(state), P = playersByNum(state);
+    const q = v => `"${String(v).replace(/"/g, '""')}"`;
+    const rows = [["Puesto", "Número", "Jugador", "Personaje", "Pts Mario Kart", "Pts Tennis", "Pts Smash", "Total", "MK puntos", "MK 1.º puestos", "Tennis puntos", "Tennis victorias", "Smash etapa"]];
+    for (const n of C.generalOrder) {
+      rows.push([C.generalRank[n], n, P[n].name, P[n].character || "", fmt(C.mk[n].gp), fmt(C.tennis[n].gp), fmt(C.smash[n].gp), fmt(C.total[n]),
+        C.mk[n].pts, C.mk[n].firsts, C.tennis[n].pts, C.tennis[n].wins, C.smash[n].stage ? SMASH[C.smash[n].stage].label : ""]);
+    }
+    return "﻿" + rows.map(r => r.map(q).join(";")).join("\r\n");
+  }
+  function summaryText(state) {
+    const C = compute(state), P = playersByNum(state);
+    const medal = r => r === 1 ? "🥇" : r === 2 ? "🥈" : r === 3 ? "🥉" : `${r}.`;
+    const lines = ["🏆 *TORNEO CAPARAZÓN AZUL* · Cumpleaños de Charkin",
+      `Mario Kart ${C.progress.mk}/13 · Tennis ${C.progress.tennis}/13 · Smash ${C.progress.smash}/13`, ""];
+    for (const n of C.generalOrder) lines.push(`${medal(C.generalRank[n])} ${P[n].name} — *${fmt(C.total[n])}* pts (MK ${fmt(C.mk[n].gp)} · T ${fmt(C.tennis[n].gp)} · S ${fmt(C.smash[n].gp)})`);
+    return lines.join("\n");
+  }
+
+  // Datos en vivo: personajes + estado por SSE; reloj alineado con el servidor
+  let offset = 0;
+  const serverNow = () => Date.now() + offset;
   async function connect(onState, onStatus) {
     const chars = await fetch("/characters.json").then(r => r.json());
     const charById = Object.fromEntries(chars.characters.map(c => [c.id, c]));
     const open = () => {
       const es = new EventSource("/api/events");
       es.onopen = () => onStatus?.(true);
-      es.onmessage = ev => { try { onState(JSON.parse(ev.data), { chars, charById }); } catch (e) { console.error(e); } };
+      es.onmessage = ev => {
+        try {
+          const st = JSON.parse(ev.data);
+          if (st.now) offset = st.now - Date.now();
+          onState(st, { chars, charById });
+        } catch (e) { console.error(e); }
+      };
       es.onerror = () => onStatus?.(false);
     };
     open();
     return { chars, charById };
   }
 
-  window.Torneo = { SCHEDULE, NUMS, GAME_NAMES, GAME_SHORT, SMASH, fmt, playersByNum, mkMatch, tennisMatch, compute, connect };
+  window.Torneo = { SCHEDULE, NUMS, GAME_NAMES, GAME_SHORT, SMASH, fmt, playersByNum, mkMatch, tennisMatch, matchDone, compute, onDeck, nextMatchFor, toCsv, summaryText, serverNow, connect };
 })();

@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#E52521">
+<title>Resultados · Torneo Caparazón Azul</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Barlow+Condensed:wght@600;700;800&family=Figtree:wght@400;600;800&display=swap">
+<style>
+  :root {
+    color-scheme: light;
+    --sky: #5C94FC; --sky-hi: #A4C8FF; --ink: #1B1A2E; --card: #FFFFFF; --cream: #FFF4D6; --muted: #55587A;
+    --red: #E52521; --yellow: #FBD000; --green: #43B047; --blue: #049CD8; --silver: #DCE2EE; --bronze: #F0B68A;
+    --mk: #E52521; --tennis: #43B047; --smash: #F08A1C;
+    --display: "Lilita One", "Arial Rounded MT Bold", "Arial Black", sans-serif;
+    --cond: "Barlow Condensed", "Arial Narrow", sans-serif;
+    --body: "Figtree", "Segoe UI", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.4; min-height: 100vh;
+    background: linear-gradient(180deg, var(--sky) 0, #79A9FD 380px, var(--sky-hi) 100%) fixed, var(--sky); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  [hidden] { display: none !important; }
+  .wrap { max-width: 760px; margin: 0 auto; padding-inline: 16px; padding-block: 0 48px; }
+  .top { background: linear-gradient(180deg, #F2433F, var(--red) 60%, #C81A16); border-bottom: 4px solid var(--ink); padding-top: env(safe-area-inset-top, 0px); }
+  header { padding-block: 16px; display: grid; gap: 4px; }
+  header h1 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(28px, 7vw, 40px); line-height: 1; color: var(--yellow);
+    -webkit-text-stroke: 2px var(--ink); paint-order: stroke fill; text-shadow: 0 3px 0 var(--ink); }
+  header h1 span { color: #fff; }
+  header p { margin: 0; color: #fff; font-weight: 800; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .live { display: inline-flex; align-items: center; gap: 6px; background: var(--green); border: 2px solid var(--ink); border-radius: 8px; padding: 1px 8px; }
+  .live i { width: 9px; height: 9px; border-radius: 50%; background: #fff; animation: blink 1.4s infinite; }
+  .live.off { background: var(--silver); color: var(--muted); } .live.off i { animation: none; }
+  @keyframes blink { 50% { opacity: .2; } }
+  .flag { height: 12px; background: conic-gradient(#fff 25%, var(--ink) 0 50%, #fff 0 75%, var(--ink) 0) 0 0 / 12px 12px; border-bottom: 3px solid var(--ink); margin-bottom: 16px; }
+
+  .card { background: var(--card); border: 3px solid var(--ink); border-radius: 16px; padding: 14px; box-shadow: 0 5px 0 var(--ink); }
+  .stack { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+  .stack > * { min-width: 0; }
+  h2 { margin: 0 0 8px; font-family: var(--display); font-weight: 400; font-size: 24px; line-height: 1.1; }
+  label.pick { display: grid; gap: 6px; font-weight: 800; }
+  select { font: inherit; font-size: 16px; font-weight: 800; background: var(--cream); color: var(--ink); border: 3px solid var(--ink); border-radius: 12px; padding: 10px; }
+  select:focus-visible, button:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+
+  .me { display: grid; grid-template-columns: 72px minmax(0, 1fr) auto; gap: 12px; align-items: center; margin-top: 12px; }
+  .me .av { width: 72px; height: 72px; border-radius: 14px; }
+  .me b { display: block; font-size: 22px; font-weight: 800; overflow-wrap: anywhere; }
+  .me small { color: var(--muted); font-weight: 700; }
+  .badge { text-align: center; font-family: var(--display); font-size: 30px; line-height: 1; background: var(--ink); color: var(--yellow); border-radius: 12px; padding: 8px 12px; }
+  .badge small { display: block; font-family: var(--cond); font-size: 13px; color: #fff; letter-spacing: .08em; text-transform: uppercase; }
+  .nextm { margin-top: 12px; border: 3px solid var(--ink); border-radius: 14px; padding: 12px; background: var(--cream); display: grid; gap: 8px; }
+  .nextm.now { background: var(--yellow); }
+  .nextm .t { font-family: var(--display); font-size: 20px; }
+  .nextm .vs { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 8px; align-items: center; font-weight: 800; }
+  .nextm .vs span:last-child { text-align: right; }
+  .nextm .vs em { font-style: normal; font-family: var(--display); color: var(--red); }
+
+  nav.seg { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 8px; }
+  nav.seg button { flex: none; cursor: pointer; font-family: var(--display); font-size: 17px; border: 3px solid var(--ink); background: #fff; color: var(--ink); border-radius: 12px; padding: 6px 12px; box-shadow: 0 3px 0 var(--ink); }
+  nav.seg button[aria-pressed="true"] { background: var(--tc, var(--blue)); color: #fff; -webkit-text-stroke: 1px var(--ink); paint-order: stroke fill; }
+  nav.seg [data-v="mk"] { --tc: var(--mk); } nav.seg [data-v="tennis"] { --tc: var(--tennis); } nav.seg [data-v="smash"] { --tc: var(--smash); }
+
+  .list { display: grid; gap: 8px; }
+  .row { display: grid; grid-template-columns: 34px 40px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 10px; border: 2px solid var(--ink); border-radius: 12px; background: #fff; }
+  .row.r1 { background: linear-gradient(180deg, #FFE45C, var(--yellow)); } .row.r2 { background: var(--silver); } .row.r3 { background: var(--bronze); }
+  .row.mine { box-shadow: 0 0 0 3px var(--blue); }
+  .pos { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font-family: var(--display); font-size: 16px; border: 2px solid var(--ink); background: #fff; }
+  .av { width: 40px; height: 40px; border-radius: 9px; background: #fff; border: 2px solid var(--ink); overflow: hidden; display: grid; place-items: center; font-family: var(--display); font-size: 14px; color: #fff; }
+  .av img { width: 100%; height: 100%; object-fit: contain; }
+  .nm { min-width: 0; }
+  .nm b { display: block; font-size: 16px; font-weight: 800; overflow-wrap: anywhere; }
+  .nm small { color: var(--muted); font-weight: 700; font-size: 12px; }
+  .r1 .nm small, .r3 .nm small { color: #5A4300; }
+  .pts { font-family: var(--display); font-size: 20px; text-align: right; }
+  .pts small { display: block; font-family: var(--cond); font-size: 12px; color: var(--muted); font-weight: 700; }
+  .deck { font-family: var(--cond); font-size: 12px; font-weight: 800; padding: 0 6px; border-radius: 6px; border: 2px solid var(--ink); color: #fff; margin-left: 6px; }
+  .deck.play { background: var(--red); } .deck.next { background: var(--blue); }
+  .cm { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 10px; border: 2px solid var(--ink); border-radius: 12px; background: #fff; }
+  .cm.now { background: var(--yellow); } .cm.done { background: #EEF6EE; }
+  .cm .n { font-family: var(--display); font-size: 18px; text-align: center; }
+  .cm .p { font-size: 14px; font-weight: 700; }
+  .cm .p .w { background: var(--yellow); border-radius: 4px; padding: 0 3px; }
+  .cm .s { font-family: var(--cond); font-weight: 800; font-size: 14px; }
+  .tier h3 { margin: 6px 0; font-family: var(--display); font-weight: 400; font-size: 18px; display: flex; justify-content: space-between; }
+  .tier h3 span { color: var(--smash); }
+  .note { color: var(--muted); font-size: 13px; margin: 6px 0 0; }
+</style>
+</head>
+<body>
+<div class="top"><div class="wrap" style="padding-block:0">
+  <header>
+    <h1>Torneo <span>Caparazón Azul</span></h1>
+    <p><span class="live" id="live"><i></i>En vivo</span> Cumpleaños de Charkin · resultados</p>
+  </header>
+</div></div>
+<div class="flag"></div>
+<div class="wrap stack">
+  <section class="card" aria-labelledby="me-h">
+    <h2 id="me-h">Tu torneo</h2>
+    <label class="pick">¿Quién eres?
+      <select id="who"><option value="">Elige tu nombre</option></select>
+    </label>
+    <div id="me"></div>
+  </section>
+  <section class="card">
+    <nav class="seg" id="tabs">
+      <button data-v="general">General</button>
+      <button data-v="mk">Mario Kart</button>
+      <button data-v="tennis">Tennis</button>
+      <button data-v="smash">Smash</button>
+      <button data-v="cal">Calendario</button>
+    </nav>
+    <div id="view" class="list"></div>
+  </section>
+</div>
+
+<script src="/torneo.js"></script>
+<script>
+const T = window.Torneo;
+const $ = id => document.getElementById(id);
+function h(tag, props = {}, ...kids) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (k === "class") el.className = v;
+    else if (k === "style") el.setAttribute("style", v);
+    else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+    else if (v !== false && v != null) el.setAttribute(k, v);
+  }
+  for (const kid of kids.flat()) if (kid != null && kid !== false) el.append(kid);
+  return el;
+}
+const store = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch { return null; } };
+
+let S = null, CH = null, C = null, P = null, D = null;
+let me = store("resultados-yo") || "", view = store("resultados-vista") || "general";
+
+function av(p) {
+  const c = p.character && CH.charById[p.character], m = S.media?.[p.character];
+  const box = h("span", { class: "av" });
+  if (m?.url && !(m.type || "").startsWith("video/")) box.append(h("img", { src: m.url, alt: "" }));
+  else { box.append(c ? c.short : String(p.num)); if (c) box.style.background = c.sig[0]; }
+  return box;
+}
+const charName = p => CH.charById[p.character]?.name || "";
+const names = pair => pair.map(n => P[n].name).join(" y ");
+const deck = n => D.playing.has(n) ? h("span", { class: "deck play" }, "JUEGA") : D.next.has(n) ? h("span", { class: "deck next" }, "SIGUE") : null;
+const myNum = () => Object.values(P).find(p => p.pickId === me)?.num;
+
+function renderMe() {
+  const sel = $("who");
+  if (sel.options.length !== Object.keys(P).length + 1 || sel.dataset.sig !== Object.values(P).map(p => p.pickId).join()) {
+    sel.replaceChildren(h("option", { value: "" }, "Elige tu nombre"),
+      ...Object.values(P).filter(p => p.pickId).sort((a, b) => a.name.localeCompare(b.name)).map(p => h("option", { value: p.pickId }, `${p.name} (${charName(p)})`)));
+    sel.dataset.sig = Object.values(P).map(p => p.pickId).join();
+  }
+  sel.value = me;
+  const box = $("me"); box.replaceChildren();
+  const n = myNum();
+  if (!n) { box.append(h("p", { class: "note" }, "Elige tu nombre para ver tu puesto y tu próxima partida.")); return; }
+  const p = P[n], started = C.progress.mk + C.progress.tennis + C.progress.smash > 0;
+  box.append(h("div", { class: "me" }, av(p),
+    h("div", {}, h("b", {}, p.name), h("small", {}, `#${n} · ${charName(p)} · Kart ${T.fmt(C.mk[n].gp)} · Tennis ${T.fmt(C.tennis[n].gp)} · Smash ${T.fmt(C.smash[n].gp)}`)),
+    h("div", { class: "badge" }, started ? C.generalRank[n] + "º" : "–", h("small", {}, `${T.fmt(C.total[n])} pts`))));
+  const nx = T.nextMatchFor(S.tournament, n);
+  if (nx) {
+    const head = nx.isNow ? "¡Juegas ahora!" : nx.ahead ? `Tu próxima partida · faltan ${nx.ahead} antes` : "Tu próxima partida";
+    box.append(h("div", { class: "nextm" + (nx.isNow ? " now" : "") },
+      h("span", { class: "t" }, head),
+      h("span", {}, `${T.GAME_NAMES[nx.game]} · Partida ${nx.match + 1}`),
+      h("div", { class: "vs" }, h("span", {}, `Tú y ${P[nx.partner].name}`), h("em", {}, "VS"), h("span", {}, names(nx.rivals)))));
+  } else if (C.smash[n].stage) {
+    box.append(h("p", { class: "note" }, `Smash: ${T.SMASH[C.smash[n].stage].label}.`));
+  } else {
+    box.append(h("p", { class: "note" }, "Ya jugaste todas tus partidas en parejas. Falta el torneo de Smash."));
+  }
+}
+
+function rowFor(n, rank, ptsMain, ptsSub, sub) {
+  return h("div", { class: "row" + (rank && rank <= 3 ? " r" + rank : "") + (n === myNum() ? " mine" : "") },
+    h("span", { class: "pos" }, rank || "–"), av(P[n]),
+    h("div", { class: "nm" }, h("b", {}, P[n].name, deck(n)), h("small", {}, sub)),
+    h("span", { class: "pts" }, ptsMain, ptsSub ? h("small", {}, ptsSub) : null));
+}
+
+function renderView() {
+  for (const b of document.querySelectorAll("#tabs button")) b.setAttribute("aria-pressed", String(b.dataset.v === view));
+  const box = $("view"); box.replaceChildren();
+  const started = C.progress.mk + C.progress.tennis + C.progress.smash > 0;
+  if (view === "general") {
+    C.generalOrder.forEach(n => box.append(rowFor(n, started ? C.generalRank[n] : null, T.fmt(C.total[n]), "pts",
+      `${charName(P[n])} · K ${T.fmt(C.mk[n].gp)} · T ${T.fmt(C.tennis[n].gp)} · S ${T.fmt(C.smash[n].gp)}`)));
+  } else if (view === "mk" || view === "tennis") {
+    const st = C[view], order = view === "mk" ? C.mkOrder : C.tennisOrder, done = C.progress[view];
+    box.append(h("p", { class: "note" }, `${T.GAME_NAMES[view]} · ${done}/13 partidas`));
+    order.forEach(n => box.append(rowFor(n, done ? st[n].rank : null, T.fmt(st[n].gp), `${st[n].pts} pts juego`,
+      `${st[n].played}/4 jugadas · ${view === "mk" ? st[n].firsts + " primeros" : st[n].wins + " victorias"}`)));
+  } else if (view === "smash") {
+    for (const [k, info] of Object.entries(T.SMASH)) {
+      const list = T.NUMS.filter(n => C.smash[n].stage === k);
+      box.append(h("div", { class: "tier" }, h("h3", {}, info.label, h("span", {}, T.fmt(info.pts) + " pts")),
+        list.length ? h("div", { class: "list" }, list.map(n => rowFor(n, null, T.fmt(info.pts), null, charName(P[n])))) : h("p", { class: "note" }, "Por definirse")));
+    }
+  } else {
+    const t = S.tournament, g = t.current.game === "tennis" ? "tennis" : "mk";
+    box.append(h("p", { class: "note" }, `Calendario de ${T.GAME_NAMES[g]}`));
+    T.SCHEDULE.forEach(([A, B], i) => {
+      const done = T.matchDone(t, g, i), now = t.current.game === g && t.current.match === i;
+      const m = g === "mk" ? T.mkMatch(t, i) : T.tennisMatch(t, i);
+      const win = g === "mk" ? m.bonus : m.winner;
+      const pair = (pr, s) => h("span", { class: win === s ? "w" : "" }, names(pr));
+      const st = g === "tennis" && done ? `${m.a}-${m.b}` : done ? "Jugada" : now ? "Ahora" : "";
+      box.append(h("div", { class: "cm" + (now ? " now" : "") + (done ? " done" : "") },
+        h("span", { class: "n" }, i + 1), h("span", { class: "p" }, pair(A, "A"), " vs ", pair(B, "B")), h("span", { class: "s" }, st)));
+    });
+  }
+}
+
+function render() {
+  if (!S || !CH) return;
+  C = T.compute(S); P = T.playersByNum(S); D = T.onDeck(S.tournament);
+  renderMe(); renderView();
+}
+
+$("who").addEventListener("change", e => { me = e.target.value; store("resultados-yo", me); render(); });
+for (const b of document.querySelectorAll("#tabs button")) b.addEventListener("click", () => { view = b.dataset.v; store("resultados-vista", view); renderView(); });
+
+T.connect((state, chars) => { S = state; CH = chars; render(); },
+  ok => { $("live").classList.toggle("off", !ok); });
+</script>
+</body>
+</html>
