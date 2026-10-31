@@ -99,10 +99,11 @@ function publicState() {
 // Torneo de la tarde: números del sorteo, resultados de los 3 juegos y qué se ve en la transmisión
 const MATCHES = 13, PLAYERS = 13;
 const SMASH_STAGES = ["campeon", "sub", "tercero", "cuarto", "cuartos", "primera"];
-const VIEWS = ["auto", "general", "mk", "tennis", "smash", "partida", "calendario", "podio"];
+const VIEWS = ["auto", "general", "mk", "tennis", "smash", "partida", "calendario", "podio", "reglas", "sorteo"];
+const SLIDES = 7;
 const GAMES = ["mk", "tennis", "smash"];
 function emptyTournament() {
-  return { numbers: {}, mk: {}, tennis: {}, smash: {}, tb: { mk: {}, tennis: {} }, view: "auto", current: { game: "mk", match: 0 }, countdown: { until: 0 },
+  return { numbers: {}, mk: {}, tennis: {}, smash: {}, tb: { mk: {}, tennis: {} }, view: "auto", current: { game: "mk", match: 0 }, countdown: { until: 0, autoStart: false }, slide: 0, draw: { at: 0, id: "" },
     timers: { match: { acc: 0, start: 0, running: false }, total: { acc: 0, start: 0, running: false } } };
 }
 const intIn = (v, lo, hi) => Number.isInteger(v) && v >= lo && v <= hi;
@@ -136,10 +137,19 @@ function sanitizeTournament(input) {
     const until = obj(t.countdown).until;
     if (Number.isInteger(until) && until >= 0 && until <= Date.now() + 3600 * 1000) out.countdown.until = until;
   }
+  // Al terminar la cuenta regresiva arranca el cronómetro de partida (lo decide el servidor, no el cliente)
+  const prevCd = state.tournament?.countdown || {};
+  out.countdown.autoStart = intIn(t.countdownSeconds, 1, 3600) ? true : out.countdown.until === prevCd.until && out.countdown.until > 0 ? !!prevCd.autoStart : false;
+  // Presentación de reglas y sorteo en vivo
+  if (intIn(t.slide, 0, SLIDES - 1)) out.slide = t.slide;
+  const dr = obj(t.draw);
+  if (Number.isInteger(dr.at) && dr.at > Date.now() - 24 * 3600 * 1000 && dr.at <= Date.now() + 60000 && typeof dr.id === "string" && dr.id.length <= 24) out.draw = { at: dr.at, id: dr.id };
+  if (t.drawStart === true) out.draw = { at: Date.now(), id: crypto.randomBytes(6).toString("hex") };
   // Cronómetros (partida y total) con la hora del servidor; timerCmd = { match|total: "start"|"pause"|"reset" }
   const now = Date.now(), DAY = 24 * 3600 * 1000;
   for (const key of ["match", "total"]) {
-    const tm = obj(obj(t.timers)[key]);
+    // Base: lo que ya tiene el servidor (los relojes solo cambian con timerCmd o con el fin de la cuenta)
+    const tm = obj(obj(state.tournament?.timers)[key]);
     const running = tm.running === true && Number.isInteger(tm.start) && tm.start > now - DAY && tm.start <= now + 60000;
     out.timers[key] = { acc: intIn(tm.acc, 0, DAY) ? tm.acc : 0, start: running ? tm.start : 0, running };
   }
@@ -224,6 +234,7 @@ app.post("/api/admin/login", requireAdmin, (req, res) => res.json({ ok: true }))
 
 app.put("/api/admin/tournament", requireAdmin, (req, res) => {
   state.tournament = sanitizeTournament(req.body);
+  scheduleAutoStart();
   save(); broadcast();
   res.json({ ok: true, tournament: state.tournament });
 });
@@ -266,6 +277,24 @@ app.use((err, req, res, next) => {
   console.error(err);
   res.status(500).json({ error: "Error del servidor. Inténtalo de nuevo." });
 });
+
+// Cuando vence la cuenta regresiva: cronómetro de partida desde cero (y el total, si no había empezado)
+let autoTimer = null;
+function scheduleAutoStart() {
+  clearTimeout(autoTimer);
+  const cd = state.tournament?.countdown;
+  if (!cd?.until || !cd.autoStart) return;
+  autoTimer = setTimeout(() => {
+    const t = state.tournament, c = t?.countdown;
+    if (!c || c.until !== cd.until || !c.autoStart) return;
+    t.timers ||= emptyTournament().timers;
+    t.timers.match = { acc: 0, start: c.until, running: true };
+    if (!t.timers.total.running && !t.timers.total.acc) t.timers.total = { acc: 0, start: c.until, running: true };
+    c.autoStart = false;
+    save(); broadcast();
+  }, Math.max(0, cd.until - Date.now()));
+}
+scheduleAutoStart();
 
 app.listen(PORT, () => {
   console.log(`Torneo Caparazón Azul en puerto ${PORT} · datos en ${DATA_DIR}`);

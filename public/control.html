@@ -50,7 +50,7 @@
   nav.tabs button { flex: none; cursor: pointer; background: #fff; border: 3px solid var(--ink); border-radius: 12px; color: var(--ink); font-family: var(--display); font-size: 19px;
     padding: 6px 14px; box-shadow: 0 4px 0 var(--ink); }
   nav.tabs button[aria-selected="true"] { background: var(--tc, var(--yellow)); color: #fff; -webkit-text-stroke: 1px var(--ink); paint-order: stroke fill; }
-  nav.tabs [data-tab="tx"], nav.tabs [data-tab="players"], nav.tabs [data-tab="tb"] { --tc: var(--blue); }
+  nav.tabs [data-tab="tx"], nav.tabs [data-tab="players"], nav.tabs [data-tab="tb"], nav.tabs [data-tab="show"] { --tc: var(--blue); }
   nav.tabs [data-tab="mk"] { --tc: var(--mk); } nav.tabs [data-tab="tennis"] { --tc: var(--tennis); } nav.tabs [data-tab="smash"] { --tc: var(--smash); }
 
   h2 { font-family: var(--display); font-weight: 400; font-size: 26px; margin: 0 0 6px; line-height: 1.1; }
@@ -153,6 +153,7 @@
   <div id="app" hidden>
     <nav class="tabs" role="tablist" id="tabs">
       <button data-tab="quick" role="tab">Rápido</button>
+      <button data-tab="show" role="tab">Presentación</button>
       <button data-tab="tx" role="tab">Transmisión</button>
       <button data-tab="players" role="tab">Jugadores</button>
       <button data-tab="mk" role="tab">Mario Kart</button>
@@ -194,7 +195,7 @@ function change(mut) {
   mut(W); dirty = true; setStatus("Guardando…", "saving"); render();
   clearTimeout(saveTimer); saveTimer = setTimeout(save, 350);
 }
-function bodyOnce() { const b = JSON.stringify(W); delete W.countdownSeconds; delete W.timerCmd; return b; }
+function bodyOnce() { const b = JSON.stringify(W); delete W.countdownSeconds; delete W.timerCmd; delete W.drawStart; return b; }
 function paintUndo() { const u = $("undo"); u.disabled = !history.length; u.textContent = history.length ? `Deshacer (${history.length})` : "Deshacer"; }
 $("undo").addEventListener("click", () => {
   if (!history.length) return;
@@ -308,7 +309,7 @@ setInterval(() => {
   }
 }, 500);
 
-const VIEWS = [["auto", "Automático"], ["general", "Tabla general"], ["mk", "Ranking Kart"], ["tennis", "Ranking Tennis"], ["smash", "Smash"], ["partida", "Partida actual"], ["calendario", "Calendario"], ["podio", "Podio"]];
+const VIEWS = [["auto", "Automático"], ["general", "Tabla general"], ["mk", "Ranking Kart"], ["tennis", "Ranking Tennis"], ["smash", "Smash"], ["partida", "Partida actual"], ["calendario", "Calendario"], ["podio", "Podio"], ["reglas", "Reglas"], ["sorteo", "Sorteo"]];
 
 /* ---------- Reiniciar (para pruebas) ---------- */
 let confirmReset = false, resetNumbers = false;
@@ -349,10 +350,48 @@ function exportCard() {
       } }, "Descargar Excel (CSV)")));
 }
 
+/* ---------- Presentación: sorteo en vivo y reglas paso a paso ---------- */
+let confirmLiveDraw = false;
+function randomNumbers(w) {
+  const nums = T.NUMS.slice();
+  for (let i = nums.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [nums[i], nums[j]] = [nums[j], nums[i]]; }
+  w.numbers = {};
+  S.picks.slice(0, 13).forEach((p, k) => { w.numbers[p.id] = nums[k]; });
+}
+function tabShow() {
+  const hasResults = Object.keys(W.mk).length + Object.keys(W.tennis).length + Object.keys(W.smash).length > 0;
+  const liveDraw = () => { change(w => { randomNumbers(w); w.drawStart = true; w.view = "sorteo"; w.countdownSeconds = 0; w.countdown = { until: 0 }; }); confirmLiveDraw = false; };
+  const replay = () => change(w => { w.drawStart = true; w.view = "sorteo"; });
+  const k = W.slide || 0, onRules = W.view === "reglas";
+  const goSlide = i => change(w => { w.slide = i; w.view = "reglas"; });
+  const assigned = Object.keys(W.numbers).length;
+  return h("div", { class: "grid cols-2" },
+    h("div", { class: "card" },
+      h("h2", {}, "Sorteo en vivo"),
+      h("p", { class: "lead" }, "La TV anuncia el sorteo y revela los números del 1 al 13 uno por uno, con una ruleta de personajes. Dura unos 40 segundos."),
+      confirmLiveDraw
+        ? h("div", { class: "confirm" }, h("span", { class: "warn" }, hasResults ? "Ya hay resultados cargados: un sorteo nuevo cambia quién jugó cada partida." : "Se reemplazan los números actuales."),
+            h("button", { class: "btn warn", onclick: liveDraw }, "Sí, sortear en la TV"), h("button", { class: "btn", onclick: () => { confirmLiveDraw = false; render(); } }, "Cancelar"))
+        : h("div", { class: "seg" },
+            h("button", { "aria-pressed": "true", onclick: () => { if (assigned) { confirmLiveDraw = true; render(); } else liveDraw(); } }, "Sortear en vivo en la TV"),
+            h("button", { disabled: assigned < 13, onclick: replay }, "Repetir la animación (mismos números)")),
+      h("div", { class: "label" }, "Números actuales"),
+      h("div", { class: "summary" }, T.NUMS.map(n => h("span", {}, `#${n} ${player(n).name}`)))),
+    h("div", { class: "card" },
+      h("h2", {}, "Reglas paso a paso"),
+      h("p", { class: "lead" }, "Toca una pantalla para mostrarla en la TV. Pasa a la siguiente cuando todos la hayan leído."),
+      h("div", { class: "seg", style: "flex-direction:column;align-items:stretch" }, T.SLIDES.map((sl, i) =>
+        h("button", { style: "text-align:left", "aria-pressed": String(onRules && k === i), onclick: () => goSlide(i) }, `${i + 1}. ${sl.tag} · ${sl.title}`))),
+      h("div", { class: "bignav", style: "margin-top:12px" },
+        h("button", { class: "btn", disabled: !onRules || k === 0, onclick: () => goSlide(k - 1) }, "◀ Anterior"),
+        h("button", { class: "btn primary", disabled: onRules && k === T.SLIDES.length - 1, onclick: () => goSlide(onRules ? k + 1 : 0) }, onRules ? "Siguiente ▶" : "Empezar en la 1"),
+        h("button", { class: "btn", onclick: () => change(w => { w.view = "auto"; }) }, "Volver a Automático"))));
+}
+
 /* ---------- Transmisión ---------- */
 function tabTx() {
   const C = T.compute({ ...S, tournament: W });
-  const views = [["auto", "Automático (rota cada 15 s)"], ["general", "Tabla general"], ["mk", "Ranking Mario Kart"], ["tennis", "Ranking Tennis"], ["smash", "Smash"], ["partida", "Partida actual"], ["calendario", "Calendario de parejas"], ["podio", "Podio"]];
+  const views = [["auto", "Automático (rota cada 15 s)"], ["general", "Tabla general"], ["mk", "Ranking Mario Kart"], ["tennis", "Ranking Tennis"], ["smash", "Smash"], ["partida", "Partida actual"], ["calendario", "Calendario de parejas"], ["podio", "Podio"], ["reglas", "Reglas (presentación)"], ["sorteo", "Sorteo de números"]];
   const g = W.current.game, i = W.current.match;
   const [A, B] = T.SCHEDULE[i];
   return h("div", { class: "grid cols-2" },
@@ -541,14 +580,14 @@ function render() {
   if (!S || !CH || !W) return;
   for (const b of document.querySelectorAll("#tabs button")) b.setAttribute("aria-selected", String(b.dataset.tab === tab));
   document.querySelector(`#tabs [data-tab="${tab}"]`)?.scrollIntoView({ block: "nearest", inline: "nearest" });
-  const fn = { quick: tabQuick, tx: tabTx, players: tabPlayers, mk: tabMk, tennis: tabTennis, smash: tabSmash, tb: tabTb }[tab] || tabTx;
+  const fn = { quick: tabQuick, show: tabShow, tx: tabTx, players: tabPlayers, mk: tabMk, tennis: tabTennis, smash: tabSmash, tb: tabTb }[tab] || tabTx;
   const y = scrollY;
   $("panel").replaceChildren(fn());
   paintUndo();
   scrollTo(0, y);
 }
 
-for (const b of document.querySelectorAll("#tabs button")) b.addEventListener("click", () => { tab = b.dataset.tab; try { localStorage.setItem("control-tab", tab); } catch {} confirmDraw = false; confirmReset = false; render(); });
+for (const b of document.querySelectorAll("#tabs button")) b.addEventListener("click", () => { tab = b.dataset.tab; try { localStorage.setItem("control-tab", tab); } catch {} confirmDraw = false; confirmReset = false; confirmLiveDraw = false; render(); });
 
 function showLogin(msg) { $("app").hidden = true; $("login").hidden = false; $("login-msg").textContent = msg || ""; $("login-msg").className = "msg err"; }
 $("login").addEventListener("submit", async e => {

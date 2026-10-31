@@ -310,6 +310,53 @@
   #stage[data-theme="smash"] .topbar { background: linear-gradient(180deg, #4A1A5E, #2B0D3A 60%, #1E0A2A); }
   #stage[data-theme="smash"] .ticker { background: linear-gradient(90deg, #D9480F, #F08A1C 50%, #D9480F); }
 
+  /* Reglas, una pantalla a la vez */
+  .slide { flex: 1; display: flex; flex-direction: column; gap: 22px; background: var(--card); border: 4px solid var(--ink); border-radius: 28px; box-shadow: 0 8px 0 var(--ink); padding: 36px 48px; min-height: 0; }
+  .slide h3 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 68px; line-height: 1; }
+  .slide .lead { margin: 0; font-size: 36px; font-weight: 700; color: var(--muted); }
+  .slide ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 18px; }
+  .slide li { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 20px; align-items: center; font-size: 40px; font-weight: 700; line-height: 1.2; }
+  .slide li i { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-family: var(--display); font-size: 28px; color: #fff;
+    background: var(--red); border: 3px solid var(--ink); -webkit-text-stroke: 1px var(--ink); paint-order: stroke fill; }
+  .secs { display: grid; gap: 16px; }
+  .sec { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 22px; align-items: start; }
+  .sec b { font-family: var(--display); font-weight: 400; font-size: 30px; color: #fff; background: var(--sc, var(--red)); border: 3px solid var(--ink); border-radius: 12px; padding: 4px 14px; text-align: center; -webkit-text-stroke: 1px var(--ink); paint-order: stroke fill; }
+  .sec span { font-size: 34px; font-weight: 600; line-height: 1.25; }
+  .ptable { display: grid; grid-template-columns: repeat(7, 1fr); gap: 14px; }
+  .ptable div { display: grid; justify-items: center; gap: 4px; border: 3px solid var(--ink); border-radius: 16px; padding: 12px 0; background: var(--cream); box-shadow: 0 4px 0 var(--ink); }
+  .ptable div:first-child { background: linear-gradient(180deg, #FFE45C, var(--yellow)); }
+  .ptable b { font-family: var(--display); font-weight: 400; font-size: 30px; }
+  .ptable span { font-family: var(--display); font-size: 46px; line-height: 1; color: var(--red); }
+  .ptable small { font-size: 18px; font-weight: 800; color: var(--muted); }
+  .slide .foot { margin: 0; font-size: 30px; font-weight: 700; background: var(--cream); border: 3px dashed var(--ink); border-radius: 14px; padding: 12px 18px; }
+  .gcards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+  .gcards div { border: 4px solid var(--ink); border-radius: 20px; padding: 26px; display: grid; gap: 8px; background: var(--gc); color: #fff; box-shadow: 0 6px 0 var(--ink); }
+  .gcards b { font-family: var(--display); font-weight: 400; font-size: 42px; line-height: 1.05; -webkit-text-stroke: 2px var(--ink); paint-order: stroke fill; }
+  .gcards span { font-size: 28px; font-weight: 800; }
+  .gcards em { font-style: normal; font-family: var(--display); font-size: 26px; background: #fff; color: var(--ink); border: 3px solid var(--ink); border-radius: 10px; padding: 0 10px; justify-self: start; }
+  .sprog { margin-top: auto; display: flex; gap: 10px; align-items: center; font-size: 24px; font-weight: 800; color: var(--muted); }
+  .sprog i { width: 40px; height: 10px; border-radius: 5px; background: var(--silver); border: 2px solid var(--ink); }
+  .sprog i.on { background: var(--red); }
+
+  /* Sorteo en vivo */
+  .draw { flex: 1; display: grid; grid-template-columns: 560px minmax(0, 1fr); gap: 28px; min-height: 0; }
+  .spin { display: grid; justify-items: center; align-content: center; gap: 16px; text-align: center; background: linear-gradient(180deg, #FFE45C, var(--yellow)); border: 5px solid var(--ink); border-radius: 30px; box-shadow: 0 8px 0 var(--ink); padding: 24px; }
+  .spin .bign { font-family: var(--display); font-size: 120px; line-height: .9; color: #fff; -webkit-text-stroke: 6px var(--ink); paint-order: stroke fill; text-shadow: 0 8px 0 var(--ink); }
+  .spin .av { width: 320px; height: 320px; border-radius: 26px; border-width: 5px; box-shadow: 0 6px 0 var(--ink); font-size: 80px; }
+  .spin .av.rolling { filter: blur(1.5px); }
+  .spin .nm { font-size: 56px; font-weight: 800; line-height: 1; min-height: 56px; }
+  .spin .ch { font-size: 28px; font-weight: 800; color: #5A4300; min-height: 30px; }
+  .spin .msg { font-family: var(--display); font-size: 64px; line-height: 1.05; }
+  .slots { display: grid; grid-template-columns: 1fr 1fr; grid-auto-flow: column; grid-template-rows: repeat(7, minmax(0, 1fr)); gap: 12px 18px; min-height: 0; }
+  .dslot { display: grid; grid-template-columns: 64px 60px minmax(0, 1fr); gap: 14px; align-items: center; background: rgba(255,255,255,.55); border: 3px dashed var(--ink); border-radius: 16px; padding: 6px 14px 6px 8px; min-height: 0; transition: background .3s, transform .3s; }
+  .dslot .dn { justify-self: center; width: 54px; height: 54px; border-radius: 12px; display: grid; place-items: center; font-family: var(--display); font-size: 28px; color: #fff; background: var(--blue); border: 3px solid var(--ink); -webkit-text-stroke: 1px var(--ink); paint-order: stroke fill; }
+  .dslot .av { width: 60px; height: 60px; }
+  .dslot b { font-size: 32px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+  .dslot small { font-size: 20px; font-weight: 700; color: var(--muted); }
+  .dslot .q { font-family: var(--display); font-size: 34px; color: rgba(27,26,46,.35); }
+  .dslot.on { background: #fff; border-style: solid; box-shadow: 0 4px 0 var(--ink); }
+  .dslot.now { background: var(--yellow); transform: scale(1.03); }
+
   @media (prefers-reduced-motion: reduce) { .view, .row { animation: none; transition: none; } .live i { animation: none; } }
 </style>
 </head>
@@ -583,6 +630,73 @@ function viewCountdown() {
     h("div", { class: "count" }, timer, pairs));
 }
 
+// Reglas: una pantalla por vez, la elige el organizador
+function viewRules() {
+  const k = Math.min(S.tournament.slide || 0, T.SLIDES.length - 1), sl = T.SLIDES[k];
+  const GC = { mk: "var(--mk)", tennis: "var(--tennis)", smash: "var(--smash)" };
+  const body = [h("h3", {}, sl.title), sl.lead ? h("p", { class: "lead" }, sl.lead) : null];
+  if (sl.games) body.push(h("div", { class: "gcards" }, sl.games.map(([g, name, sub], i) => h("div", { style: `--gc:${GC[g]}` }, h("em", {}, `Juego ${i + 1}`), h("b", {}, name), h("span", {}, sub)))));
+  if (sl.table) body.push(h("div", { class: "ptable" }, T.NUMS.map(n => h("div", {}, h("b", {}, n + ".º"), h("span", {}, String(14 - n)), h("small", {}, "pts")))));
+  if (sl.items) body.push(h("ul", {}, sl.items.map((x, i) => h("li", {}, h("i", {}, String(i + 1)), h("span", {}, x)))));
+  if (sl.sections) body.push(h("div", { class: "secs" }, sl.sections.map(([a, b]) => h("div", { class: "sec", style: `--sc:${GC[sl.theme] || "var(--red)"}` }, h("b", {}, a), h("span", {}, b)))));
+  if (sl.foot) body.push(h("p", { class: "foot" }, sl.foot));
+  body.push(h("div", { class: "sprog" }, T.SLIDES.map((_, i) => h("i", { class: i === k ? "on" : "" })), `Regla ${k + 1} de ${T.SLIDES.length}`));
+  return h("section", { class: "view" },
+    h("div", { class: "vhead" }, h("span", { class: "tag", style: `--g:${GC[sl.theme] || "var(--red)"}` }, sl.tag), h("h2", {}, "Cómo será el torneo")),
+    h("div", { class: "slide" }, body));
+}
+
+// Sorteo en vivo: revela del #1 al #13 con ruleta de personajes
+function viewDraw() {
+  const ph = T.drawPhase(S.tournament.draw);
+  const slots = T.NUMS.map(n => h("div", { class: "dslot", id: "ds-" + n }, h("span", { class: "dn" }, n), h("span", { class: "q" }, "?"), h("span")));
+  return h("section", { class: "view" },
+    h("div", { class: "vhead" }, h("span", { class: "tag", style: "--g:var(--blue)" }, "SORTEO"), h("h2", {}, "Sorteo de números"),
+      h("p", {}, "Tu número decide tus parejas en Mario Kart y Tennis")),
+    h("div", { class: "draw" },
+      h("div", { class: "spin", id: "spin" }, h("div", { class: "msg" }, ph ? "¡Prepárense!" : "El sorteo empieza en un momento")),
+      h("div", { class: "slots" }, slots)));
+}
+let drawKey = null, lastReveal = -1, drawDone = false;
+function paintDraw() {
+  const box = $("spin"); if (!box) return;
+  const ph = T.drawPhase(S.tournament.draw);
+  if (!ph) return;
+  if (S.tournament.draw.id !== drawKey) { drawKey = S.tournament.draw.id; lastReveal = -1; drawDone = false; }
+  const pl = n => P[n];
+  for (const n of T.NUMS) {
+    const el = $("ds-" + n); if (!el) continue;
+    const on = n <= ph.revealed;
+    if (on && !el.classList.contains("on")) {
+      const p = pl(n);
+      el.replaceChildren(h("span", { class: "dn" }, n), av(p), h("div", {}, h("b", {}, p.name), h("small", {}, charName(p))));
+    }
+    el.classList.toggle("on", on);
+    el.classList.toggle("now", ph.phase !== "done" && n === ph.k + 1);
+  }
+  const num = ph.k + 1;
+  if (ph.phase === "intro") {
+    if (!box.dataset.intro) { box.dataset.intro = "1"; box.replaceChildren(h("div", { class: "msg" }, "¡Prepárense!"), h("div", { class: "ch" }, "13 jugadores · 13 números")); }
+    return;
+  }
+  delete box.dataset.intro;
+  if (ph.phase === "done") {
+    if (!drawDone) { drawDone = true; SFX.fanfare(); box.replaceChildren(h("div", { class: "msg" }, "¡Sorteo listo!"), h("div", { class: "ch" }, "Con estos números se arman las parejas")); }
+    return;
+  }
+  if (ph.phase === "spin") {
+    const ids = T.NUMS.filter(n => n >= num), rnd = pl(ids[Math.floor(Math.random() * ids.length)]);
+    const a = av(rnd); a.classList.add("rolling");
+    box.replaceChildren(h("div", { class: "bign" }, "#" + num), a, h("div", { class: "nm" }, "…"), h("div", { class: "ch" }, " "));
+    if (Math.random() < .35) SFX.tick();
+  } else if (lastReveal !== num) {
+    lastReveal = num; SFX.coin();
+    const p = pl(num);
+    box.replaceChildren(h("div", { class: "bign" }, "#" + num), av(p), h("div", { class: "nm" }, p.name), h("div", { class: "ch" }, charName(p)));
+  }
+}
+setInterval(() => { if (S && lastView === "sorteo") paintDraw(); }, 110);
+
 function rotation() {
   const g = S.tournament.current.game;
   const base = g === "smash" ? ["general", "smash"] : ["general", g, "partida", "calendario"];
@@ -629,13 +743,14 @@ function draw(force) {
   // Vista
   const view = currentView();
   const g = S.tournament.current.game;
-  $("stage").dataset.theme = ["mk", "tennis", "smash"].includes(view) ? view : ["partida", "calendario", "cuenta"].includes(view) ? g : "mario";
+  $("stage").dataset.theme = ["mk", "tennis", "smash"].includes(view) ? view : ["partida", "calendario", "cuenta"].includes(view) ? g
+    : view === "reglas" ? (T.SLIDES[S.tournament.slide || 0]?.theme || "mario") : "mario";
   const main = $("main");
   const old = main.querySelector(".board");
   const oldPos = {};
   if (old && view === lastView) old.querySelectorAll(".row").forEach(r => oldPos[r.dataset.num] = r.style.transform);
   const el = view === "general" ? viewGeneral() : view === "partida" ? viewMatch() : view === "smash" ? viewSmash() : view === "calendario" ? viewSchedule()
-    : view === "podio" ? viewPodium() : view === "cuenta" ? viewCountdown() : viewGame(view);
+    : view === "podio" ? viewPodium() : view === "cuenta" ? viewCountdown() : view === "reglas" ? viewRules() : view === "sorteo" ? viewDraw() : viewGame(view);
   if (view === lastView && !force) el.style.animation = "none";
   main.replaceChildren(el);
   // Reordenamiento animado: arranca en la posición anterior
@@ -645,6 +760,7 @@ function draw(force) {
   }
   lastView = view;
   paintClocks();
+  if (view === "sorteo") paintDraw();
   // Indicador de rotación
   const rot = $("rot"); rot.replaceChildren();
   if (S.tournament.view === "auto") rotation().forEach((_, i) => rot.append(h("i", { class: i === rotIdx % rotation().length ? "on" : "", style: `--dur:${ROT_MS}ms` })));
@@ -698,6 +814,7 @@ function tone(freq, start, dur, type = "square", vol = .12) {
 }
 const SFX = {
   coin() { tone(988, 0, .08); tone(1319, .08, .35); },
+  tick() { tone(660 + Math.random() * 300, 0, .04, "square", .05); },
   beep() { tone(880, 0, .12, "square", .1); },
   go() { tone(1760, 0, .5, "square", .12); },
   fanfare() { [523, 659, 784, 1047, 784, 1047].forEach((f, i) => tone(f, i * .12, i === 5 ? .6 : .14)); }
