@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#E52521">
+<title>Guía del Torneo Caparazón Azul</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Figtree:wght@400;600;800&display=swap">
+<style>
+  :root {
+    color-scheme: light;
+    --sky: #5C94FC; --sky-hi: #A4C8FF; --ink: #1B1A2E; --card: #FFFFFF; --cream: #FFF4D6; --muted: #55587A;
+    --red: #E52521; --yellow: #FBD000; --green: #43B047; --blue: #049CD8; --brick: #C84C0C; --orange: #F08A1C;
+    --display: "Lilita One", "Arial Rounded MT Bold", "Arial Black", sans-serif;
+    --body: "Figtree", "Segoe UI", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.55; min-height: 100vh;
+    background: linear-gradient(180deg, var(--sky) 0, #79A9FD 420px, var(--sky-hi) 100%) fixed, var(--sky); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .wrap { max-width: 860px; margin: 0 auto; padding-inline: 16px; padding-block: 0 56px; }
+  .top { background: linear-gradient(180deg, #F2433F, var(--red) 60%, #C81A16); border-bottom: 4px solid var(--ink); padding-top: env(safe-area-inset-top, 0px); }
+  header { padding-block: 22px 18px; }
+  .kicker { display: inline-block; font-family: var(--display); font-size: 15px; background: var(--yellow); border: 2px solid var(--ink); border-radius: 8px; padding: 1px 10px; margin-bottom: 8px; }
+  h1 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(32px, 7vw, 48px); line-height: 1; color: var(--yellow); text-wrap: balance;
+    -webkit-text-stroke: 2px var(--ink); paint-order: stroke fill; text-shadow: 0 4px 0 var(--ink); }
+  h1 span { color: #fff; }
+  header p { margin: 10px 0 0; color: #fff; font-weight: 600; max-width: 60ch; }
+  .flag { height: 12px; background: conic-gradient(#fff 25%, var(--ink) 0 50%, #fff 0 75%, var(--ink) 0) 0 0 / 12px 12px; border-bottom: 3px solid var(--ink); margin-bottom: 22px; }
+
+  .stack { display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr); }
+  .card { background: var(--card); border: 3px solid var(--ink); border-radius: 18px; box-shadow: 0 6px 0 var(--ink); padding: 18px 20px 20px; min-width: 0; }
+  h2 { margin: 0 0 12px; font-family: var(--display); font-weight: 400; font-size: 26px; line-height: 1.1; display: flex; align-items: center; gap: 10px; text-wrap: balance; }
+  h2 .tag { font-size: 14px; color: #fff; background: var(--c, var(--blue)); border: 2px solid var(--ink); border-radius: 8px; padding: 0 8px; -webkit-text-stroke: .8px var(--ink); paint-order: stroke fill; }
+  h3 { margin: 18px 0 8px; font-family: var(--display); font-weight: 400; font-size: 19px; }
+  p { margin: 0 0 10px; max-width: 68ch; }
+
+  .links { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); }
+  .link { display: grid; gap: 2px; text-decoration: none; color: var(--ink); border: 3px solid var(--ink); border-radius: 14px; padding: 10px 14px; background: var(--cream); box-shadow: 0 4px 0 var(--ink); }
+  .link:hover { background: var(--yellow); }
+  .link:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+  .link b { font-family: var(--display); font-weight: 400; font-size: 20px; }
+  .link code { font-size: 14px; font-weight: 800; color: var(--blue); }
+  .link span { font-size: 14px; color: var(--muted); }
+
+  ol, ul { margin: 0; padding-left: 24px; display: grid; gap: 8px; max-width: 70ch; }
+  ol.steps { list-style: none; padding: 0; counter-reset: s; }
+  ol.steps > li { counter-increment: s; display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 12px; align-items: start; }
+  ol.steps > li::before { content: counter(s); width: 34px; height: 34px; display: grid; place-items: center; font-family: var(--display); font-size: 18px; color: #fff;
+    background: var(--red); border: 2px solid var(--ink); border-radius: 50%; -webkit-text-stroke: .8px var(--ink); paint-order: stroke fill; }
+  ol.steps ul { margin-top: 6px; }
+  .btnref { display: inline-block; font-weight: 800; font-size: .92em; background: var(--yellow); border: 2px solid var(--ink); border-radius: 8px; padding: 0 7px; white-space: nowrap; }
+  .btnref.red { background: var(--red); color: #fff; }
+  .tabref { display: inline-block; font-family: var(--display); font-size: .92em; background: #fff; border: 2px solid var(--ink); border-radius: 8px; padding: 0 7px; white-space: nowrap; }
+
+  .views { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); margin-top: 8px; }
+  .views div { border: 2px solid var(--ink); border-radius: 12px; padding: 8px 12px; background: #fff; }
+  .views b { display: block; font-family: var(--display); font-weight: 400; font-size: 17px; }
+  .views span { font-size: 14px; color: var(--muted); }
+
+  .faq { display: grid; gap: 10px; }
+  .faq div { border-left: 6px solid var(--orange); background: var(--cream); border-radius: 10px; padding: 8px 12px; }
+  .faq b { display: block; }
+  .rules { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); }
+  .rules div { border: 2px solid var(--ink); border-radius: 12px; padding: 10px 12px; background: #fff; border-top: 8px solid var(--c); }
+  .rules b { font-family: var(--display); font-weight: 400; font-size: 18px; display: block; margin-bottom: 4px; }
+  .rules span { font-size: 14px; }
+  footer { text-align: center; color: var(--ink); font-weight: 700; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="top"><div class="wrap" style="padding-block:0">
+  <header>
+    <span class="kicker">Guía para organizadores</span>
+    <h1>Cómo usar el <span>Torneo Caparazón Azul</span></h1>
+    <p>Todo lo que necesitas para llevar el torneo del cumpleaños de Charkin: preparar la TV, cargar resultados y cerrar con el podio.</p>
+  </header>
+</div></div>
+<div class="flag"></div>
+
+<main class="wrap stack">
+  <section class="card">
+    <h2>Los 4 links</h2>
+    <div class="links">
+      <a class="link" href="/control"><b>Panel de control</b><code>/control</code><span>Para el organizador. Pide la contraseña.</span></a>
+      <a class="link" href="/marcador"><b>Marcador de la TV</b><code>/marcador</code><span>Se abre en la tablet conectada a la TV.</span></a>
+      <a class="link" href="/resultados"><b>Resultados</b><code>/resultados</code><span>Para los jugadores, en su celular.</span></a>
+      <a class="link" href="/"><b>Elegir personaje</b><code>/</code><span>Donde cada uno reservó su personaje.</span></a>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="tag" style="--c:var(--blue)">1</span> Antes de empezar</h2>
+    <ol class="steps">
+      <li><div>Entra a <b>/control</b> con la contraseña de organizador.</div></li>
+      <li><div>Borra las pruebas: <span class="tabref">Transmisión</span> → al final, <span class="btnref red">Reiniciar torneo</span> → <span class="btnref red">Sí, reiniciar todo</span>.
+        <ul><li>Deja sin marcar <b>“También borrar los números del sorteo”</b> si los números ya están bien.</li></ul></div></li>
+      <li><div>Si quieres un sorteo nuevo: <span class="tabref">Jugadores</span> → <span class="btnref">Sortear números al azar</span>.</div></li>
+      <li><div>En la <b>tablet</b>: abre <b>/marcador</b>, toca la pantalla y luego <span class="btnref">Pantalla completa</span> y <span class="btnref">Sonido: activado</span>. Conecta la tablet a la TV.
+        <ul><li>En <b>iPad</b>: Safari → Compartir → <b>Agregar a pantalla de inicio</b>, y abre el marcador desde ese ícono.</li>
+        <li>Desactiva el bloqueo automático de pantalla de la tablet.</li></ul></div></li>
+      <li><div>Comparte el link de <b>/resultados</b> en el grupo: cada jugador elige su nombre y ve su próxima partida.</div></li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="tag" style="--c:var(--red)">2</span> Durante el torneo: pestaña Rápido</h2>
+    <p>Casi todo se hace desde <span class="tabref">Rápido</span>, la primera pestaña del panel.</p>
+    <ol class="steps">
+      <li><div>Arriba elige el <b>juego en curso</b>: Mario Kart, Mario Tennis o Smash.</div></li>
+      <li><div>Aparece la <b>partida en pantalla</b> con las dos parejas. Carga el resultado:
+        <ul><li><b>Mario Kart:</b> la posición final (1.º a 24.º) de cada jugador. El bono +3 se calcula solo. Si dos tienen la misma posición, se marca en rojo.</li>
+        <li><b>Tennis:</b> los juegos que ganó cada pareja, por ejemplo 3-1.</li></ul></div></li>
+      <li><div>Al completar la partida, la TV muestra la <b>celebración</b> con monedas y música.</div></li>
+      <li><div>Toca <span class="btnref">Siguiente + cuenta de 2 min</span>: pasa a la siguiente partida y la TV muestra la cuenta regresiva con las parejas que entran.
+        <ul><li>Otros tiempos: botones <b>1, 2, 3 o 5 min</b>, o <b>Cancelar</b>.</li></ul></div></li>
+      <li><div><b>Smash:</b> elige “Smash Bros. Ultimate” como juego en curso y marca hasta dónde llegó cada jugador. Arriba ves si cuadran 1 campeón, 1 subcampeón, 3.º, 4.º, 4 en cuartos y 5 en primera ronda.</div></li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2><span class="tag" style="--c:var(--green)">3</span> Qué se ve en la TV</h2>
+    <p>Lo eliges en <span class="tabref">Rápido</span> o en <span class="tabref">Transmisión</span>. La cuenta regresiva y las celebraciones aparecen solas encima de cualquier vista.</p>
+    <div class="views">
+      <div><b>Automático</b><span>Rota cada 15 s: general, ranking del juego, partida actual y calendario. Úsalo casi siempre.</span></div>
+      <div><b>Tabla general</b><span>Los 13 con puntos de cada juego y total. “JUEGA” y “SIGUE” marcan a quién le toca.</span></div>
+      <div><b>Ranking Kart / Tennis</b><span>Posiciones dentro de cada juego.</span></div>
+      <div><b>Partida actual</b><span>Las dos parejas en grande con el resultado.</span></div>
+      <div><b>Calendario</b><span>Las 13 partidas: jugadas, la de ahora y las pendientes.</span></div>
+      <div><b>Podio</b><span>Los 3 primeros y el resto debajo. Ideal para el cierre.</span></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="tag" style="--c:var(--orange)">4</span> Si algo sale mal</h2>
+    <div class="faq">
+      <div><b>Me equivoqué al cargar un resultado</b>Toca <span class="btnref">Deshacer</span> arriba en el panel. Guarda tus últimos 40 cambios.</div>
+      <div><b>Hay un empate que no resuelven las reglas</b>Pestaña <span class="tabref">Desempates</span>: marca quién ganó la partida extra o el tie-break. Si no se juega, comparten los puntos.</div>
+      <div><b>El marcador dice “RECONECTANDO”</b>Revisa el wifi de la tablet. Se reconecta solo y vuelve a mostrar todo.</div>
+      <div><b>No suena</b>Toca la pantalla del marcador una vez y revisa que diga <span class="btnref">Sonido: activado</span>.</div>
+      <div><b>Necesito cambiar el número de un jugador</b>Pestaña <span class="tabref">Jugadores</span>: elige el número; si lo tenía otro, se intercambian.</div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="tag" style="--c:var(--brick)">5</span> Al final</h2>
+    <ol class="steps">
+      <li><div>Pon la vista <b>Podio</b> para cerrar la transmisión.</div></li>
+      <li><div>En <span class="tabref">Transmisión</span> → <b>Compartir resultados</b>: <span class="btnref">Copiar resumen para WhatsApp</span> o <span class="btnref">Descargar Excel (CSV)</span>.</div></li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>Puntos, en resumen</h2>
+    <div class="rules">
+      <div style="--c:var(--red)"><b>Mario Kart</b><span>25 − posición final. La pareja que suma más gana +3 cada uno (si empatan, no hay bono).</span></div>
+      <div style="--c:var(--green)"><b>Mario Tennis</b><span>1 punto por juego ganado por tu pareja, +3 si ganan el partido.</span></div>
+      <div style="--c:var(--orange)"><b>Smash</b><span>Campeón 13 · Sub 12 · 3.º 11 · 4.º 10 · cuartos 7,5 · primera ronda 3.</span></div>
+      <div style="--c:var(--blue)"><b>General</b><span>En Kart y Tennis, según tu puesto sumas de 13 (1.º) a 1 (13.º). Gana quien sume más en los 3 juegos.</span></div>
+    </div>
+  </section>
+
+  <footer>Torneo Caparazón Azul · Edición 1 · Cumpleaños de Charkin</footer>
+</main>
+</body>
+</html>

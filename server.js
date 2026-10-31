@@ -205,6 +205,7 @@ app.put("/api/admin/tournament", requireAdmin, (req, res) => {
 app.get("/marcador", (req, res) => res.sendFile(path.join(__dirname, "public", "marcador.html")));
 app.get("/control", (req, res) => res.sendFile(path.join(__dirname, "public", "control.html")));
 app.get("/resultados", (req, res) => res.sendFile(path.join(__dirname, "public", "resultados.html")));
+app.get("/guia", (req, res) => res.sendFile(path.join(__dirname, "public", "guia.html")));
 
 function removeMediaFile(charId) {
   const old = state.media[charId];
