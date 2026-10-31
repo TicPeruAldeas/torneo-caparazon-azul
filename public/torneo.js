@@ -148,7 +148,7 @@
     return null;
   }
 
-  // Exportar: CSV para Excel (separador ; y coma decimal) y resumen para WhatsApp
+  // Exportar: CSV para Excel (separador ; y coma decimal)
   function toCsv(state) {
     const C = compute(state), P = playersByNum(state);
     const q = v => `"${String(v).replace(/"/g, '""')}"`;
@@ -159,15 +159,6 @@
     }
     return "﻿" + rows.map(r => r.map(q).join(";")).join("\r\n");
   }
-  function summaryText(state) {
-    const C = compute(state), P = playersByNum(state);
-    const medal = r => r === 1 ? "🥇" : r === 2 ? "🥈" : r === 3 ? "🥉" : `${r}.`;
-    const lines = ["🏆 *TORNEO CAPARAZÓN AZUL* · Cumpleaños de Charkin",
-      `Mario Kart ${C.progress.mk}/13 · Tennis ${C.progress.tennis}/13 · Smash ${C.progress.smash}/13`, ""];
-    for (const n of C.generalOrder) lines.push(`${medal(C.generalRank[n])} ${P[n].name} — *${fmt(C.total[n])}* pts (MK ${fmt(C.mk[n].gp)} · T ${fmt(C.tennis[n].gp)} · S ${fmt(C.smash[n].gp)})`);
-    return lines.join("\n");
-  }
-
   // Datos en vivo: personajes + estado por SSE; reloj alineado con el servidor
   let offset = 0;
   const serverNow = () => Date.now() + offset;
@@ -190,5 +181,5 @@
     return { chars, charById };
   }
 
-  window.Torneo = { SCHEDULE, NUMS, GAME_NAMES, GAME_SHORT, SMASH, fmt, playersByNum, mkMatch, tennisMatch, matchDone, compute, onDeck, nextMatchFor, toCsv, summaryText, serverNow, connect };
+  window.Torneo = { SCHEDULE, NUMS, GAME_NAMES, GAME_SHORT, SMASH, fmt, playersByNum, mkMatch, tennisMatch, matchDone, compute, onDeck, nextMatchFor, toCsv, serverNow, connect };
 })();

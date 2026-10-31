@@ -206,9 +206,10 @@
   .cst.score { font-size: 30px; background: var(--ink); color: var(--yellow); }
 
   /* JUEGA / SIGUE en la tabla */
-  .deck { font-family: var(--display); font-size: calc(17px * var(--k)); padding: 0 8px; border-radius: 8px; border: 2px solid var(--ink); color: #fff; -webkit-text-stroke: 1px var(--ink); paint-order: stroke fill; white-space: nowrap; }
-  .deck.play { background: var(--red); animation: pulse 1.2s ease-in-out infinite; }
-  .deck.next { background: var(--blue); }
+  .deck { flex: none; font-family: var(--display); font-size: calc(17px * var(--k)); padding: 0 8px; border-radius: 8px; border: 2px solid var(--ink); color: #fff; -webkit-text-stroke: 1px var(--ink); paint-order: stroke fill; white-space: nowrap; }
+  .who > .deck { color: #fff; font-size: calc(17px * var(--k)); }
+  .deck.is-play { background: var(--red); animation: pulse 1.2s ease-in-out infinite; }
+  .deck.is-next { background: var(--blue); }
   @keyframes pulse { 50% { transform: scale(1.08); } }
 
   /* Podio */
@@ -261,6 +262,43 @@
   #snd { position: fixed; right: max(16px, env(safe-area-inset-right)); bottom: calc(max(16px, env(safe-area-inset-bottom)) + 64px); z-index: 5; font: 800 18px var(--cond);
     padding: 10px 16px; border-radius: 14px; border: 3px solid var(--ink); background: #fff; color: var(--ink); box-shadow: 0 4px 0 var(--ink); cursor: pointer; transition: opacity .4s; }
   #snd.hide { opacity: 0; pointer-events: none; }
+
+  /* Ambiente según el juego: cielo de Mario (general/podio), pista (Kart), cancha (Tennis), escenario (Smash) */
+  #stage { transition: background .6s; }
+  #stage[data-theme="mk"] { background:
+      repeating-linear-gradient(115deg, rgba(255,255,255,.035) 0 3px, transparent 3px 110px),
+      linear-gradient(180deg, #4A5063 0%, #343947 55%, #262A35 100%); }
+  #stage[data-theme="mk"] .clouds { opacity: 1; background:
+      repeating-linear-gradient(180deg, #E52521 0 46px, #fff 46px 92px) left top / 26px 100% no-repeat,
+      repeating-linear-gradient(180deg, #fff 0 46px, #E52521 46px 92px) right top / 26px 100% no-repeat; }
+  #stage[data-theme="mk"] .hills { top: 0; bottom: 0; height: auto; opacity: .22; background:
+      repeating-linear-gradient(90deg, #fff 0 90px, transparent 90px 180px) 0 38% / 100% 8px no-repeat,
+      repeating-linear-gradient(90deg, #fff 0 90px, transparent 90px 180px) 45px 72% / 100% 8px no-repeat; }
+  #stage[data-theme="mk"] .ticker { border-top-color: var(--ink); background:
+      repeating-linear-gradient(90deg, var(--yellow) 0 70px, transparent 70px 140px) 0 50% / 100% 6px no-repeat, #262A35; }
+
+  #stage[data-theme="tennis"] { background:
+      repeating-linear-gradient(90deg, rgba(255,255,255,.04) 0 120px, transparent 120px 240px),
+      linear-gradient(180deg, #3FA35A 0%, #2E8B4A 60%, #23763D 100%); }
+  #stage[data-theme="tennis"] .clouds { opacity: 1; inset: 200px 90px 130px; border: 6px solid rgba(255,255,255,.45); background:
+      linear-gradient(rgba(255,255,255,.45), rgba(255,255,255,.45)) 50% 0 / 6px 100% no-repeat,
+      linear-gradient(rgba(255,255,255,.45), rgba(255,255,255,.45)) 0 22% / 100% 6px no-repeat,
+      linear-gradient(rgba(255,255,255,.45), rgba(255,255,255,.45)) 0 78% / 100% 6px no-repeat; }
+  #stage[data-theme="tennis"] .hills { display: none; }
+  #stage[data-theme="tennis"] .topbar { background: linear-gradient(180deg, #58C25C, var(--green) 60%, #2E8B3E); }
+  #stage[data-theme="tennis"] .ticker { background: linear-gradient(0deg, transparent 0 82%, rgba(255,255,255,.7) 82% 90%, transparent 90%), #1C6233; }
+  #stage[data-theme="tennis"] .ticker .lab { background: #E8F86A; }
+
+  #stage[data-theme="smash"] { background:
+      repeating-conic-gradient(from 0deg at 50% 58%, rgba(255,255,255,.05) 0 5deg, transparent 5deg 15deg),
+      radial-gradient(circle at 50% 58%, #FF9B2F 0, #D9480F 16%, #5B1647 46%, #1E0A2A 80%); }
+  #stage[data-theme="smash"] .clouds { opacity: .16; background:
+      radial-gradient(circle at 50% 58%, transparent 0 330px, #fff 330px 352px, transparent 352px),
+      linear-gradient(#fff, #fff) 50% 58% / 22px 704px no-repeat,
+      linear-gradient(#fff, #fff) 50% 58% / 704px 22px no-repeat; }
+  #stage[data-theme="smash"] .hills { display: none; }
+  #stage[data-theme="smash"] .topbar { background: linear-gradient(180deg, #4A1A5E, #2B0D3A 60%, #1E0A2A); }
+  #stage[data-theme="smash"] .ticker { background: linear-gradient(90deg, #D9480F, #F08A1C 50%, #D9480F); }
 
   @media (prefers-reduced-motion: reduce) { .view, .row { animation: none; transition: none; } .live i { animation: none; } }
 </style>
@@ -331,6 +369,8 @@ function fit() {
   if (S) draw();
 }
 addEventListener("resize", fit);
+addEventListener("orientationchange", () => setTimeout(fit, 300));
+try { new ResizeObserver(() => fit()).observe(document.documentElement); } catch {}
 
 let S = null, C = null, CH = null, P = null, DECK = { playing: new Set(), next: new Set() };
 fit();
@@ -346,10 +386,7 @@ function av(player) {
   if (c) box.style.background = m?.url ? "#fff" : c.sig[0];
   return box;
 }
-function dots(player) {
-  const c = CH?.charById[player.character];
-  return c ? h("span", { class: "dots" }, c.colors.map(id => h("i", { style: `background:${CH.chars.colors[id]?.hex}` }))) : null;
-}
+function dots() { return null; }
 function charName(player) { return CH?.charById[player.character]?.name || "Sin personaje"; }
 function pairNames(pair) { return pair.map(n => P[n].name).join(" y "); }
 
@@ -367,8 +404,8 @@ function board(kind, order, cells) {
 }
 
 function deckChip(n) {
-  if (DECK.playing.has(n)) return h("span", { class: "deck play" }, "JUEGA");
-  if (DECK.next.has(n)) return h("span", { class: "deck next" }, "SIGUE");
+  if (DECK.playing.has(n)) return h("span", { class: "deck is-play" }, "JUEGA");
+  if (DECK.next.has(n)) return h("span", { class: "deck is-next" }, "SIGUE");
   return null;
 }
 
@@ -386,7 +423,7 @@ function viewGeneral() {
     return h("div", { class: "row" + (started && r <= 3 ? " r" + r : "") },
       h("span", { class: "pos" }, started ? r : "–", d ? h("span", { class: "delta " + (d > 0 ? "up" : "down") }, (d > 0 ? "▲" : "▼") + Math.abs(d)) : null),
       av(p),
-      h("span", { class: "who" }, h("b", {}, p.name), h("span", {}, h("span", { class: "num" }, "#" + n), dots(p), charName(p)),
+      h("span", { class: "who" }, h("b", {}, p.name), h("span", {}, charName(p)),
         started && r === 1 ? h("span", { class: "crown" }, "★") : null, deckChip(n)),
       h("span", { class: "cell" + (C.mk[n].gp == null ? " dim" : "") }, T.fmt(C.mk[n].gp)),
       h("span", { class: "cell" + (C.tennis[n].gp == null ? " dim" : "") }, T.fmt(C.tennis[n].gp)),
@@ -409,7 +446,7 @@ function viewGame(g) {
     return h("div", { class: "row" + (r && r <= 3 ? " r" + r : "") },
       h("span", { class: "pos" }, r ? (s.tied ? r + "=" : r) : "–"),
       av(p),
-      h("span", { class: "who" }, h("b", {}, p.name), h("span", {}, h("span", { class: "num" }, "#" + n), dots(p), charName(p)), g === S.tournament.current.game ? deckChip(n) : null),
+      h("span", { class: "who" }, h("b", {}, p.name), h("span", {}, charName(p)), g === S.tournament.current.game ? deckChip(n) : null),
       h("span", { class: "cell" }, `${s.played}/4`),
       h("span", { class: "cell" }, g === "mk" ? s.firsts : s.wins),
       h("span", { class: "cell" }, s.pts),
@@ -576,6 +613,8 @@ function draw(force) {
   const [lab, txt] = ticker(); $("tick-lab").textContent = lab; $("tick-txt").textContent = txt;
   // Vista
   const view = currentView();
+  const g = S.tournament.current.game;
+  $("stage").dataset.theme = ["mk", "tennis", "smash"].includes(view) ? view : ["partida", "calendario", "cuenta"].includes(view) ? g : "mario";
   const main = $("main");
   const old = main.querySelector(".board");
   const oldPos = {};

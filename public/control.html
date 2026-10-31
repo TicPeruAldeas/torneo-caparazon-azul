@@ -289,24 +289,17 @@ function resetCard() {
 }
 
 /* ---------- Exportar ---------- */
-let shareText = null;
 function exportCard() {
   const st = { ...S, tournament: W };
   return h("div", { class: "card" },
-    h("h2", {}, "Compartir resultados"),
-    h("p", { class: "lead" }, "Descarga la tabla para Excel o copia un resumen listo para pegar en el grupo de WhatsApp."),
+    h("h2", {}, "Descargar resultados"),
+    h("p", { class: "lead" }, "Descarga la tabla completa para abrirla en Excel."),
     h("div", { class: "seg" },
       h("button", { onclick: () => {
         const blob = new Blob([T.toCsv(st)], { type: "text/csv;charset=utf-8" });
         const a = h("a", { href: URL.createObjectURL(blob), download: "torneo-caparazon-azul.csv" });
         document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-      } }, "Descargar Excel (CSV)"),
-      h("button", { onclick: async e => {
-        const text = T.summaryText(st);
-        try { await navigator.clipboard.writeText(text); e.target.textContent = "¡Copiado!"; setTimeout(() => { e.target.textContent = "Copiar resumen para WhatsApp"; }, 2000); }
-        catch { shareText = text; render(); }
-      } }, "Copiar resumen para WhatsApp")),
-    shareText ? h("textarea", { class: "share", readonly: true, "aria-label": "Resumen para copiar" }, shareText) : null);
+      } }, "Descargar Excel (CSV)")));
 }
 
 /* ---------- Transmisión ---------- */
