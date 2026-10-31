@@ -102,7 +102,8 @@ const SMASH_STAGES = ["campeon", "sub", "tercero", "cuarto", "cuartos", "primera
 const VIEWS = ["auto", "general", "mk", "tennis", "smash", "partida", "calendario", "podio"];
 const GAMES = ["mk", "tennis", "smash"];
 function emptyTournament() {
-  return { numbers: {}, mk: {}, tennis: {}, smash: {}, tb: { mk: {}, tennis: {} }, view: "auto", current: { game: "mk", match: 0 }, countdown: { until: 0 } };
+  return { numbers: {}, mk: {}, tennis: {}, smash: {}, tb: { mk: {}, tennis: {} }, view: "auto", current: { game: "mk", match: 0 }, countdown: { until: 0 },
+    timers: { match: { acc: 0, start: 0, running: false }, total: { acc: 0, start: 0, running: false } } };
 }
 const intIn = (v, lo, hi) => Number.isInteger(v) && v >= lo && v <= hi;
 const obj = v => (v && typeof v === "object" && !Array.isArray(v)) ? v : {};
@@ -135,6 +136,23 @@ function sanitizeTournament(input) {
     const until = obj(t.countdown).until;
     if (Number.isInteger(until) && until >= 0 && until <= Date.now() + 3600 * 1000) out.countdown.until = until;
   }
+  // Cronómetros (partida y total) con la hora del servidor; timerCmd = { match|total: "start"|"pause"|"reset" }
+  const now = Date.now(), DAY = 24 * 3600 * 1000;
+  for (const key of ["match", "total"]) {
+    const tm = obj(obj(t.timers)[key]);
+    const running = tm.running === true && Number.isInteger(tm.start) && tm.start > now - DAY && tm.start <= now + 60000;
+    out.timers[key] = { acc: intIn(tm.acc, 0, DAY) ? tm.acc : 0, start: running ? tm.start : 0, running };
+  }
+  const cmds = obj(t.timerCmd);
+  const apply = (key, cmd) => {
+    const tm = out.timers[key];
+    if (cmd === "start" && !tm.running) { tm.running = true; tm.start = now; }
+    else if (cmd === "pause" && tm.running) { tm.acc = Math.min(DAY, tm.acc + now - tm.start); tm.running = false; tm.start = 0; }
+    else if (cmd === "reset") { tm.acc = 0; tm.running = false; tm.start = 0; }
+  };
+  for (const key of ["match", "total"]) if (["start", "pause", "reset"].includes(cmds[key])) apply(key, cmds[key]);
+  // Al iniciar una partida, el tiempo total arranca solo si aún no empezó
+  if (cmds.match === "start" && !out.timers.total.running && out.timers.total.acc === 0) apply("total", "start");
   return out;
 }
 

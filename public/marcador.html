@@ -170,7 +170,17 @@
       var(--brick); }
   .ticker .lab { font-family: var(--display); font-size: 24px; background: var(--yellow); color: var(--ink); padding: 5px 14px; border-radius: 10px; border: 3px solid var(--ink); box-shadow: 0 3px 0 var(--ink); }
   .ticker .txt { font-size: 30px; font-weight: 800; color: #fff; background: rgba(27,26,46,.78); padding: 4px 16px; border-radius: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .ticker .rot { margin-left: auto; display: flex; gap: 8px; background: rgba(27,26,46,.78); padding: 8px 10px; border-radius: 10px; }
+  .clocks { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+  .tm { display: flex; align-items: baseline; gap: 8px; background: var(--ink); color: var(--yellow); border: 3px solid var(--ink); border-radius: 10px; padding: 2px 12px;
+    font-family: var(--display); font-size: 32px; line-height: 1.15; font-variant-numeric: tabular-nums; box-shadow: 0 3px 0 rgba(0,0,0,.35); }
+  .tm small { font-family: var(--cond); font-size: 16px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #fff; }
+  .tm.total { background: #fff; color: var(--ink); }
+  .tm.total small { color: var(--muted); }
+  .tm.paused { opacity: .75; }
+  .tm.paused::after { content: "❚❚"; font-size: 16px; margin-left: 2px; }
+  .vs .mclock { margin-top: 16px; display: inline-flex; align-items: baseline; gap: 8px; font-size: 44px; background: var(--ink); color: var(--yellow); border-radius: 14px; padding: 4px 16px; font-variant-numeric: tabular-nums; }
+  .vs .mclock small { font-family: var(--cond); font-size: 18px; color: #fff; font-weight: 800; }
+  .ticker .rot { margin-left: 0; display: flex; gap: 8px; background: rgba(27,26,46,.78); padding: 8px 10px; border-radius: 10px; }
   .ticker .rot:empty { display: none; }
   .ticker .rot i { width: 34px; height: 8px; border-radius: 4px; background: rgba(255,255,255,.3); overflow: hidden; position: relative; }
   .ticker .rot i.on::after { content: ""; position: absolute; inset: 0; background: var(--yellow); transform-origin: left; animation: fill var(--dur, 15s) linear forwards; }
@@ -329,6 +339,10 @@
   <footer class="ticker">
     <span class="lab" id="tick-lab">SIGUE</span>
     <span class="txt" id="tick-txt">Cargando el torneo…</span>
+    <span class="clocks" id="clocks">
+      <span class="tm" id="tm-match" hidden><small>Partida</small><span>00:00</span></span>
+      <span class="tm total" id="tm-total" hidden><small>Torneo</small><span>00:00</span></span>
+    </span>
     <span class="rot" id="rot"></span>
   </footer>
 </div>
@@ -493,6 +507,7 @@ function viewMatch() {
   if (tn && tn.a != null) mid = h("div", { class: "vs" }, h("div", { class: "score" }, `${tn.a}-${tn.b}`));
   else if (mk && mk.complete) mid = h("div", { class: "vs" }, h("div", { class: "big" }, "VS"), h("div", { class: "bonus" }, `${mk.sumA} · ${mk.sumB}`));
   else mid = h("div", { class: "vs" }, h("div", { class: "big" }, "VS"));
+  mid.append(h("div", { class: "mclock", id: "mclock", hidden: true }, h("small", {}, "Tiempo"), h("span", {}, "00:00")));
   const nx = T.SCHEDULE[i + 1];
   return h("section", { class: "view" },
     h("div", { class: "vhead" }, h("span", { class: "tag", style: `--g:var(--${g})` }, T.GAME_SHORT[g]), h("h2", {}, `Partida ${i + 1} de 13`),
@@ -629,6 +644,7 @@ function draw(force) {
     rows.forEach(r => { const to = r.style.transform; if (oldPos[r.dataset.num] && oldPos[r.dataset.num] !== to) { r.style.transition = "none"; r.style.transform = oldPos[r.dataset.num]; requestAnimationFrame(() => requestAnimationFrame(() => { r.style.transition = ""; r.style.transform = to; })); } });
   }
   lastView = view;
+  paintClocks();
   // Indicador de rotación
   const rot = $("rot"); rot.replaceChildren();
   if (S.tournament.view === "auto") rotation().forEach((_, i) => rot.append(h("i", { class: i === rotIdx % rotation().length ? "on" : "", style: `--dur:${ROT_MS}ms` })));
@@ -695,8 +711,26 @@ sndBtn.t = setTimeout(() => sndBtn.classList.add("hide"), 4000);
 
 // Reloj de la cuenta regresiva: solo actualiza el número; al terminar vuelve a la vista normal
 let lastSec = null, cdActive = false;
+function paintClocks() {
+  const tms = S.tournament.timers || {};
+  for (const [id, key] of [["tm-match", "match"], ["tm-total", "total"]]) {
+    const el = $(id), tm = tms[key];
+    const show = !!tm && (tm.running || tm.acc > 0);
+    el.hidden = !show;
+    if (!show) continue;
+    el.lastElementChild.textContent = T.fmtDuration(T.elapsed(tm));
+    el.classList.toggle("paused", !tm.running);
+  }
+  const big = $("mclock");
+  if (big) {
+    const tm = tms.match, show = !!tm && (tm.running || tm.acc > 0);
+    big.hidden = !show;
+    if (show) big.lastElementChild.textContent = T.fmtDuration(T.elapsed(tm));
+  }
+}
 setInterval(() => {
   if (!S) return;
+  paintClocks();
   const left = countdownLeft(), active = left > -4000;
   if (active !== cdActive) { cdActive = active; lastSec = null; draw(true); return; }
   if (!active) return;

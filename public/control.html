@@ -116,6 +116,11 @@
   .cdbox { display: grid; gap: 10px; }
   .cdclock { font-family: var(--display); font-size: 56px; line-height: 1; text-align: center; padding: 10px; border-radius: 14px; border: 3px solid var(--ink); background: var(--cream); font-variant-numeric: tabular-nums; }
   .cdclock.on { background: var(--yellow); }
+  .clockrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+  .clockrow + .clockrow { margin-top: 12px; padding-top: 12px; border-top: 2px dashed var(--silver); }
+  .clockval { font-family: var(--display); font-size: 40px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .clockval small { display: block; font-family: var(--cond); font-size: 14px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .clockval.on { color: var(--green-dk); }
   .copied { font-size: 13px; font-weight: 800; color: var(--ok); }
   textarea.share { width: 100%; min-height: 160px; font: 13px/1.4 ui-monospace, Consolas, monospace; border: 2px solid var(--ink); border-radius: 10px; padding: 8px; }
 </style>
@@ -189,7 +194,7 @@ function change(mut) {
   mut(W); dirty = true; setStatus("Guardando…", "saving"); render();
   clearTimeout(saveTimer); saveTimer = setTimeout(save, 350);
 }
-function bodyOnce() { const b = JSON.stringify(W); delete W.countdownSeconds; return b; }
+function bodyOnce() { const b = JSON.stringify(W); delete W.countdownSeconds; delete W.timerCmd; return b; }
 function paintUndo() { const u = $("undo"); u.disabled = !history.length; u.textContent = history.length ? `Deshacer (${history.length})` : "Deshacer"; }
 $("undo").addEventListener("click", () => {
   if (!history.length) return;
@@ -231,7 +236,7 @@ function tabQuick() {
   const g = W.current.game, i = W.current.match;
   const done = g !== "smash" && T.matchDone(W, g, i);
   const startCd = sec => change(w => { w.countdownSeconds = sec; w.countdown = { until: sec ? T.serverNow() + sec * 1000 : 0 }; });
-  const goNext = (sec) => change(w => { w.current.match = nextPending(g, i); if (sec) { w.countdownSeconds = sec; w.countdown = { until: T.serverNow() + sec * 1000 }; } });
+  const goNext = (sec) => change(w => { w.current.match = nextPending(g, i); timerCmd(w, "match", "reset"); if (sec) { w.countdownSeconds = sec; w.countdown = { until: T.serverNow() + sec * 1000 }; } });
   const left = (W.countdown?.until || 0) - T.serverNow();
   const main = h("div", { class: "grid" },
     h("div", { class: "card" },
@@ -245,6 +250,7 @@ function tabQuick() {
         h("button", { class: "btn primary", disabled: i === 12 || !done, onclick: () => goNext(120) }, "Siguiente + cuenta de 2 min"))
     ]);
   const side = h("div", { class: "grid" },
+    clockCard(),
     h("div", { class: "card cdbox" },
       h("h2", {}, "Cuenta regresiva"),
       h("p", { class: "lead", style: "margin:0" }, "Aparece en la TV en grande con las parejas de la partida en pantalla, y suena al final."),
@@ -263,6 +269,45 @@ setInterval(() => {
   const left = (W.countdown?.until || 0) - T.serverNow();
   el.textContent = left > 0 ? fmtClock(left) : "—"; el.classList.toggle("on", left > 0);
 }, 500);
+/* Cronómetros: se aplican en el servidor; aquí se reflejan al instante */
+function timerLocal(w, key, cmd) {
+  w.timers ||= { match: { acc: 0, start: 0, running: false }, total: { acc: 0, start: 0, running: false } };
+  const tm = w.timers[key], now = T.serverNow();
+  if (cmd === "start" && !tm.running) { tm.running = true; tm.start = now; }
+  else if (cmd === "pause" && tm.running) { tm.acc += now - tm.start; tm.running = false; tm.start = 0; }
+  else if (cmd === "reset") { tm.acc = 0; tm.running = false; tm.start = 0; }
+}
+function timerCmd(w, key, cmd) {
+  w.timerCmd = { ...(w.timerCmd || {}), [key]: cmd };
+  timerLocal(w, key, cmd);
+  if (key === "match" && cmd === "start" && !w.timers.total.running && !w.timers.total.acc) { w.timerCmd.total = "start"; timerLocal(w, "total", "start"); }
+}
+function clockCard() {
+  const tms = W.timers || {};
+  const row = (key, label, hint) => {
+    const tm = tms[key] || { acc: 0, running: false };
+    return h("div", { class: "clockrow" },
+      h("div", { class: "clockval" + (tm.running ? " on" : ""), id: "clk-" + key }, h("small", {}, label), T.fmtDuration(T.elapsed(tm))),
+      h("div", { class: "seg" },
+        tm.running
+          ? h("button", { onclick: () => change(w => timerCmd(w, key, "pause")) }, "Pausar")
+          : h("button", { "aria-pressed": "true", onclick: () => change(w => timerCmd(w, key, "start")) }, tm.acc ? "Seguir" : "Iniciar"),
+        h("button", { disabled: !tm.running && !tm.acc, onclick: () => change(w => timerCmd(w, key, "reset")) }, "Reiniciar")),
+      hint ? h("small", { style: "grid-column:1/-1;color:var(--muted)" }, hint) : null);
+  };
+  return h("div", { class: "card" },
+    h("h2", {}, "Cronómetro"),
+    row("match", "Partida en curso", "Al iniciar la primera partida arranca también el tiempo total. Al pasar de partida, vuelve a cero."),
+    row("total", "Tiempo total del torneo"));
+}
+setInterval(() => {
+  if (!W?.timers) return;
+  for (const key of ["match", "total"]) {
+    const el = $("clk-" + key); if (!el) continue;
+    el.lastChild.textContent = T.fmtDuration(T.elapsed(W.timers[key]));
+  }
+}, 500);
+
 const VIEWS = [["auto", "Automático"], ["general", "Tabla general"], ["mk", "Ranking Kart"], ["tennis", "Ranking Tennis"], ["smash", "Smash"], ["partida", "Partida actual"], ["calendario", "Calendario"], ["podio", "Podio"]];
 
 /* ---------- Reiniciar (para pruebas) ---------- */
@@ -272,6 +317,7 @@ function resetCard() {
     w.mk = {}; w.tennis = {}; w.smash = {}; w.tb = { mk: {}, tennis: {} };
     w.current = { game: "mk", match: 0 }; w.view = "auto";
     w.countdown = { until: 0 }; w.countdownSeconds = 0;
+    timerCmd(w, "match", "reset"); timerCmd(w, "total", "reset"); delete w.timerCmd.total; w.timerCmd = { match: "reset", total: "reset" };
     if (resetNumbers) w.numbers = {};
   }); confirmReset = false; resetNumbers = false; setStatus("Torneo reiniciado · puedes usar Deshacer si fue un error", "ok"); };
   return h("div", { class: "card" },

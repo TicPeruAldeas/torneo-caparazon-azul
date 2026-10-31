@@ -181,5 +181,12 @@
     return { chars, charById };
   }
 
-  window.Torneo = { SCHEDULE, NUMS, GAME_NAMES, GAME_SHORT, SMASH, fmt, playersByNum, mkMatch, tennisMatch, matchDone, compute, onDeck, nextMatchFor, toCsv, serverNow, connect };
+  // Cronómetros: tiempo acumulado + lo que corre desde start (hora del servidor)
+  function elapsed(tm) { return tm ? (tm.acc || 0) + (tm.running ? Math.max(0, serverNow() - tm.start) : 0) : 0; }
+  function fmtDuration(ms) {
+    const s = Math.floor(ms / 1000), hh = Math.floor(s / 3600), mm = Math.floor(s / 60) % 60, ss = s % 60;
+    return (hh ? hh + ":" + String(mm).padStart(2, "0") : String(mm).padStart(2, "0")) + ":" + String(ss).padStart(2, "0");
+  }
+
+  window.Torneo = { SCHEDULE, NUMS, GAME_NAMES, GAME_SHORT, SMASH, fmt, playersByNum, mkMatch, tennisMatch, matchDone, compute, onDeck, nextMatchFor, toCsv, serverNow, elapsed, fmtDuration, connect };
 })();
