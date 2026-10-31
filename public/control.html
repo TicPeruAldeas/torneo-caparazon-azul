@@ -123,6 +123,7 @@
   .clockval.on { color: var(--green-dk); }
   .chk { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-weight: 800; }
   .chk input { width: 22px; height: 22px; accent-color: var(--red); }
+  .card.finished { background: #E6F6E7; border-color: var(--ok, #23762A); }
   .copied { font-size: 13px; font-weight: 800; color: var(--ok); }
   textarea.share { width: 100%; min-height: 160px; font: 13px/1.4 ui-monospace, Consolas, monospace; border: 2px solid var(--ink); border-radius: 10px; padding: 8px; }
 </style>
@@ -241,16 +242,27 @@ function tabQuick() {
   const startCd = sec => change(w => { w.countdownSeconds = sec; w.countdown = { until: sec ? T.serverNow() + sec * 1000 : 0 }; });
   const goNext = (sec) => change(w => { w.current.match = nextPending(g, i); timerCmd(w, "match", "reset"); if (sec) { w.countdownSeconds = sec; w.countdown = { until: T.serverNow() + sec * 1000 }; } });
   const left = (W.countdown?.until || 0) - T.serverNow();
+  const C = T.compute({ ...S, tournament: W });
+  const over = g !== "smash" && C.progress[g] >= T.MATCHES;
+  const firstPending = gg => { for (let k = 0; k < T.MATCHES; k++) if (!T.matchDone(W, gg, k)) return k; return 0; };
+  const nextGame = g === "mk" ? "tennis" : "smash";
+  const goGame = gg => change(w => { w.current = { game: gg, match: gg === "smash" ? 0 : firstPending(gg) }; w.view = gg === "smash" ? "smash" : "partida"; timerCmd(w, "match", "reset"); });
   const main = h("div", { class: "grid" },
     h("div", { class: "card" },
       h("div", { class: "label" }, "Juego en curso"),
-      h("div", { class: "seg" }, ["mk", "tennis", "smash"].map(x => h("button", { "aria-pressed": String(g === x), onclick: () => change(w => { w.current.game = x; }) }, T.GAME_NAMES[x])))),
+      h("div", { class: "seg" }, ["mk", "tennis", "smash"].map(x => h("button", { "aria-pressed": String(g === x), onclick: () => { if (x !== g) goGame(x); } }, T.GAME_NAMES[x] + (x !== "smash" && C.progress[x] >= T.MATCHES ? " ✓" : ""))))),
+    over ? h("div", { class: "card finished" },
+      h("h2", {}, `🏁 ${T.GAME_NAMES[g]} terminado`),
+      h("p", { class: "lead" }, `Las ${T.MATCHES} partidas tienen resultado. Puedes corregir cualquiera abajo o en la pestaña del juego.`),
+      h("div", { class: "bignav" },
+        h("button", { class: "btn", onclick: () => change(w => { w.view = g; }) }, "Ver tabla final en la TV"),
+        h("button", { class: "btn primary", onclick: () => goGame(nextGame) }, `Pasar a ${T.GAME_NAMES[nextGame]} ▶`))) : null,
     g === "smash" ? tabSmash() : [
       g === "mk" ? mkCard(i) : tennisCard(i),
       h("div", { class: "bignav" },
         h("button", { class: "btn", disabled: i === 0, onclick: () => change(w => { w.current.match = i - 1; }) }, "◀ Anterior"),
-        h("button", { class: "btn primary", disabled: i === 12, onclick: () => goNext(0) }, done ? "Siguiente partida ▶" : "Saltar a la siguiente ▶"),
-        h("button", { class: "btn primary", disabled: i === 12 || !done, onclick: () => goNext(120) }, "Siguiente + cuenta de 2 min"))
+        h("button", { class: "btn primary", disabled: over || i >= T.MATCHES - 1, onclick: () => goNext(0) }, done ? "Siguiente partida ▶" : "Saltar a la siguiente ▶"),
+        h("button", { class: "btn primary", disabled: over || i >= T.MATCHES - 1 || !done, onclick: () => goNext(120) }, "Siguiente + cuenta de 2 min"))
     ]);
   const side = h("div", { class: "grid" },
     clockCard(),
@@ -407,7 +419,7 @@ function tabTx() {
         h("div", { class: "seg" },
           h("button", { disabled: i === 0, onclick: () => change(w => { w.current.match = i - 1; }) }, "◀ Anterior"),
           h("select", { "aria-label": "Partida", onchange: e => change(w => { w.current.match = +e.target.value; }) }, opts(i, T.SCHEDULE.map((_, k) => k), k => `Partida ${k + 1}`)),
-          h("button", { disabled: i === 12, onclick: () => change(w => { w.current.match = i + 1; }) }, "Siguiente ▶")),
+          h("button", { disabled: i >= T.MATCHES - 1, onclick: () => change(w => { w.current.match = i + 1; }) }, "Siguiente ▶")),
         h("p", { class: "lead", style: "margin-top:10px" }, `${pairNames(A)} vs ${pairNames(B)}`)
       ] : null),
     h("div", { class: "card" },
