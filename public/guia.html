@@ -66,6 +66,7 @@
   .rules div { border: 2px solid var(--ink); border-radius: 12px; padding: 10px 12px; background: #fff; border-top: 8px solid var(--c); }
   .rules b { font-family: var(--display); font-weight: 400; font-size: 18px; display: block; margin-bottom: 4px; }
   .rules span { font-size: 14px; line-height: 1.5; }
+  .rules span.gold { display: block; margin: 6px 0; padding: 6px 8px; border-radius: 8px; background: #FFF1A8; border: 2px solid #B8860B; font-size: inherit; }
   .rules span b.sub { display: inline; font-family: inherit; font-size: inherit; font-weight: 800; margin: 0; }
   footer { text-align: center; color: var(--ink); font-weight: 700; margin-top: 8px; }
 </style>
@@ -165,8 +166,9 @@
     <div class="rules">
       <div style="--c:var(--red)"><b>Mario Kart</b><span>
         <b class="sub">Tu carrera.</b> Mientras mejor llegues, más sumas: 1.º = 24, 2.º = 23, 3.º = 22… (25 menos tu puesto).<br>
-        <b class="sub">Bono +3.</b> En cada carrera hay 2 parejas. Se suman los puntos de los dos de cada pareja; la que tenga más gana +3 para cada uno. Si empatan, nadie gana el bono.<br>
-        <b class="sub">Ejemplo.</b> Ana 3.ª (22) + Beto 10.º (15) = 37. Carla 1.ª (24) + Dani 20.º (5) = 29. Gana la pareja de Ana: Ana 25, Beto 18, Carla 24, Dani 5.</span></div>
+        <b class="sub">Versus.</b> Cada carrera es un versus entre 2 parejas. Se suman los puntos individuales de los dos: gana la pareja que sume más.<br>
+        <span class="gold"><b class="sub">Bono +3.</b> Si tu pareja gana el versus, cada uno recibe +3 puntos adicionales, individualmente. Ej.: si llegaste 3.º, te tocan 22 por tu puesto + 3 del bono = 25. Si las parejas empatan, no hay bono.</span><br>
+        <b class="sub">Al final.</b> Se suman tus 4 carreras. Empate: gana quien tenga más primeros puestos.</span></div>
       <div style="--c:var(--green)"><b>Mario Tennis</b><span>
         <b class="sub">Por juego.</b> Cada juego que gana tu pareja = 1 punto para cada uno.<br>
         <b class="sub">Ganar.</b> La pareja que gana el partido (primera en llegar a 3 juegos) suma +3 cada uno.<br>

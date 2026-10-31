@@ -193,8 +193,8 @@
       items: ["Un sorteo te da un número del 1 al 12.", "Con ese número juegas 4 partidas, cada una con un compañero distinto.", "Tus 4 compañeros y tus rivales salen del sorteo: nadie los elige.", "Nunca juegas dos partidas seguidas."] },
     { theme: "mk", tag: "Juego 1", title: "Mario Kart · tus puntos", sections: [
       ["Tu carrera", "Mientras mejor llegues, más sumas: 1.º = 24 pts, 2.º = 23, 3.º = 22… (25 menos tu puesto)."],
-      ["Bono +3", "Se suman los puntos de los dos de cada pareja. La pareja con más puntos gana +3 extra para cada uno. Si empatan, nadie gana el bono."],
-      ["Ejemplo", "Ana llega 3.ª (22) y Beto 10.º (15): 37. Carla llega 1.ª (24) y Dani 20.º (5): 29. Ana y Beto ganan el bono: Ana 25, Beto 18, Carla 24, Dani 5."],
+      ["Versus", "Cada carrera es un versus entre 2 parejas. Se suman los puntos individuales de los dos: gana la pareja que sume más."],
+      ["Bono +3", "Si tu pareja gana el versus, cada uno recibe +3 puntos adicionales, individualmente. Ej.: si llegaste 3.º, te tocan 22 por tu puesto + 3 del bono = 25. Si las parejas empatan, no hay bono.", "gold"],
       ["Al final", "Se suman tus 4 carreras. Empate: gana quien tenga más primeros puestos."]] },
     { theme: "tennis", tag: "Juego 2", title: "Mario Tennis · tus puntos", sections: [
       ["Por juego", "Cada juego que gana tu pareja = 1 punto para ti y para tu compañero."],

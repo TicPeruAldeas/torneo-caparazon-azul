@@ -350,6 +350,9 @@
   .sec { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 22px; align-items: start; }
   .sec b { font-family: var(--display); font-weight: 400; font-size: 30px; color: #fff; background: var(--sc, var(--red)); border: 3px solid var(--ink); border-radius: 12px; padding: 4px 14px; text-align: center; -webkit-text-stroke: 1px var(--ink); paint-order: stroke fill; }
   .sec span { font-size: 34px; font-weight: 600; line-height: 1.25; }
+  .sec.gold { --sc: #F5B700; background: linear-gradient(180deg, #FFF6C9, #FFE680); border: 3px solid #B8860B; border-radius: 16px; padding: 10px 12px; box-shadow: 0 4px 0 #B8860B; }
+  .sec.gold b { background: linear-gradient(180deg, #FFE45C, #F5B700); color: #fff; }
+  .sec.gold span { font-weight: 700; }
   .ptable { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; }
   .ptable div { display: grid; justify-items: center; gap: 4px; border: 3px solid var(--ink); border-radius: 16px; padding: 12px 0; background: var(--cream); box-shadow: 0 4px 0 var(--ink); }
   .ptable div:first-child { background: linear-gradient(180deg, #FFE45C, var(--yellow)); }
@@ -695,7 +698,7 @@ function viewRules() {
   if (sl.games) body.push(h("div", { class: "gcards" }, sl.games.map(([g, name, sub], i) => h("div", { style: `--gc:${GC[g]}` }, h("em", {}, `Juego ${i + 1}`), h("b", {}, name), h("span", {}, sub)))));
   if (sl.table) body.push(h("div", { class: "ptable" }, T.NUMS.map(n => h("div", {}, h("b", {}, n + ".º"), h("span", {}, String(T.PLAYERS + 1 - n)), h("small", {}, "pts")))));
   if (sl.items) body.push(h("ul", {}, sl.items.map((x, i) => h("li", {}, h("i", {}, String(i + 1)), h("span", {}, x)))));
-  if (sl.sections) body.push(h("div", { class: "secs" }, sl.sections.map(([a, b]) => h("div", { class: "sec", style: `--sc:${GC[sl.theme] || "var(--red)"}` }, h("b", {}, a), h("span", {}, b)))));
+  if (sl.sections) body.push(h("div", { class: "secs" }, sl.sections.map(([a, b, c]) => h("div", { class: "sec" + (c ? " " + c : ""), style: `--sc:${GC[sl.theme] || "var(--red)"}` }, h("b", {}, a), h("span", {}, b)))));
   if (sl.foot) body.push(h("p", { class: "foot" }, sl.foot));
   body.push(h("div", { class: "sprog" }, T.SLIDES.map((_, i) => h("i", { class: i === k ? "on" : "" })), `Regla ${k + 1} de ${T.SLIDES.length}`));
   return h("section", { class: "view" },
