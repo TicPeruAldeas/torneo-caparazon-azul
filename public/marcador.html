@@ -280,7 +280,10 @@
   #mbtn { position: fixed; left: calc(max(16px, env(safe-area-inset-left)) + 150px); bottom: max(16px, env(safe-area-inset-bottom)); z-index: 5; font: 800 22px var(--cond);
     padding: 12px 22px; min-height: 56px; border-radius: 14px; border: 3px solid var(--ink); background: var(--green); color: #fff; box-shadow: 0 4px 0 var(--ink); cursor: pointer; touch-action: manipulation; white-space: nowrap; }
   #mbtn.stop { background: var(--red); }
+  #ctl.hide ~ #mbtn.auto { opacity: 0; pointer-events: none; }
+  #mbtn { transition: opacity .4s; }
   #mbtn.next { background: var(--yellow); color: var(--ink); }
+  #mbtn.over, #mbtn:disabled { background: #fff; color: var(--ink); cursor: default; opacity: 1; }
   #menu select { font: 700 22px var(--cond); padding: 8px 10px; min-height: 52px; border: 3px solid var(--ink); border-radius: 12px; background: var(--cream); }
   #menu .rrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; font-size: 22px; font-weight: 800; }
   #menu .rgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -500,12 +503,27 @@ function fit() {
   st.style.transform = `scale(${vw / W})`;
   // Filas más altas cuando la pantalla es más alta que 16:9 (tablets 16:10 o 4:3)
   const avail = H - 168 - 96 - 96;
-  const pitch = Math.max(56, Math.min(96, Math.floor(avail / T.PLAYERS)));
+  setPitch(Math.max(40, Math.min(96, Math.floor(avail / T.PLAYERS))));
+  if (S) draw();
+}
+function setPitch(pitch) {
   ROW_H = pitch - ROW_GAP;
-  const k = Math.max(1, Math.min(1.5, ROW_H / 48));
+  const st = $("stage"), k = Math.max(.85, Math.min(1.5, ROW_H / 48));
   st.style.setProperty("--rh", ROW_H + "px");
   st.style.setProperty("--k", k.toFixed(3));
-  if (S) draw();
+}
+// Si la tabla no entra en el espacio que dejó el encabezado, achica las filas y vuelve a dibujar una vez
+let refitting = false;
+function refitBoard(el) {
+  const bd = el.querySelector(".board");
+  if (!bd || refitting) return false;
+  const avail = el.clientHeight - bd.offsetTop - 4;
+  const want = Math.max(40, Math.min(96, Math.floor(avail / T.PLAYERS)));
+  if (want >= ROW_H + ROW_GAP && want - (ROW_H + ROW_GAP) < 3) return false;
+  setPitch(want);
+  refitting = true;
+  try { draw(true); } finally { refitting = false; }
+  return true;
 }
 addEventListener("resize", fit);
 addEventListener("orientationchange", () => setTimeout(fit, 300));
@@ -577,7 +595,7 @@ function viewGame(g) {
   const color = `var(--${g})`;
   const v = h("section", { class: "view" },
     h("div", { class: "vhead" }, h("span", { class: "tag", style: `--g:${color}` }, `${done}/${T.MATCHES}`), h("h2", {}, T.GAME_NAMES[g]),
-      h("p", {}, g === "mk" ? "Supervivencia · 25 − posición · +3 a la mejor pareja" : "Dobles · 1 punto por juego · +3 al ganar")),
+      h("p", {}, done >= T.MATCHES ? "🏁 Tabla final · todas las partidas jugadas" : g === "mk" ? "Supervivencia · 25 − posición · +3 a la mejor pareja" : "Dobles · 1 punto por juego · +3 al ganar")),
     h("div", { class: "colhead game" }, h("span", {}, "Pos"), h("span"), h("span", { style: "text-align:left" }, "Jugador"),
       h("span", {}, "Jugadas"), h("span", {}, g === "mk" ? "1.º puestos" : "Victorias"), h("span", {}, "Puntos"), h("span", {}, "Pts. generales")));
   v.append(board("game", order, (n) => {
@@ -863,6 +881,7 @@ function draw(force) {
     : view === "podio" ? viewPodium() : view === "cuenta" ? viewCountdown() : view === "reglas" ? viewRules() : view === "sorteo" ? viewDraw() : viewGame(view);
   if (view === lastView && !force) el.style.animation = "none";
   main.replaceChildren(el);
+  if (refitBoard(el)) return;
   // Reordenamiento animado: arranca en la posición anterior
   if (Object.keys(oldPos).length) {
     const rows = el.querySelectorAll(".row");
@@ -1107,6 +1126,10 @@ function renderMenu(msg) {
   const views = [["auto", "Automático"], ["general", "Tabla general"], ["partida", "Partida actual"], ["calendario", "Calendario"], ["podio", "Podio"]];
   box.append(h("h3", {}, "Qué se ve"), h("div", { class: "mrow" }, views.map(([id, l]) => b(l, () => send(x => { x.view = id; }), v === id ? "on" : ""))));
   const tm = (t.timers || {}).match || {};
+  // Cambiar de juego: entra en la primera partida pendiente
+  const firstPending = (x, gg) => { for (let k = 0; k < T.MATCHES; k++) if (!T.matchDone(x, gg, k)) return k; return T.MATCHES - 1; };
+  box.append(h("h3", {}, "Juego"), h("div", { class: "mrow" }, ["mk", "tennis", "smash"].map(gg => b(T.GAME_SHORT[gg] + (gg !== "smash" && C.progress[gg] >= T.MATCHES ? " ✓" : ""),
+    () => send(x => { x.current = { game: gg, match: gg === "smash" ? 0 : firstPending(x, gg) }; x.view = gg === "smash" ? "smash" : "partida"; x.timerCmd = { match: "reset" }; }), t.current.game === gg ? "on" : ""))));
   box.append(h("h3", {}, "Partida"), h("div", { class: "mrow" },
     ...(t.current.game !== "smash" ? [tm.running ? b("■ Terminar y poner resultado", () => renderResult(), "warn") : b("▶ Iniciar partida", startMatch, "go")] : []),
     b("Cuenta de 2 min", () => send(x => { x.countdownSeconds = 120; })),
@@ -1131,10 +1154,15 @@ function paintMatchBtn() {
   const btn = $("mbtn"), m = matchState();
   btn.hidden = !m;
   if (!m) return;
-  const label = m.running ? "■ Terminar partida " + (m.i + 1) : m.done ? (m.i < T.MATCHES - 1 ? "Siguiente partida ▶" : "✓ Juego terminado") : "▶ Iniciar partida " + (m.i + 1);
+  const over = !m.running && C.progress[m.g] >= T.MATCHES;
+  const label = over ? `🏁 ${T.GAME_SHORT[m.g]} terminado` : m.running ? "■ Terminar partida " + (m.i + 1) : m.done ? "Siguiente partida ▶" : "▶ Iniciar partida " + (m.i + 1);
   if (btn.textContent !== label) btn.textContent = label;
-  btn.className = m.running ? "stop" : m.done ? "next" : "";
-  btn.disabled = !m.running && m.done && m.i >= T.MATCHES - 1;
+  btn.className = (over ? "over" : m.running ? "stop" : m.done ? "next" : "") + (currentView() === "partida" ? "" : " auto");
+  btn.disabled = over;
+}
+function finishIfLast(x, g) {
+  const done = T.SCHEDULE.every((_, k) => T.matchDone(x, g, k));
+  if (done) { x.view = g; toast(`¡${T.GAME_NAMES[g]} terminado! La TV muestra la tabla final.`); }
 }
 function startMatch() {
   send(x => { x.view = "partida"; x.countdownSeconds = 0; x.timerCmd = { match: "restart" }; });
@@ -1169,7 +1197,7 @@ function renderResult(msg) {
       const r = {};
       for (const n of [...A, ...B]) { const v = +sels[n].value; if (!v) return renderResult("Falta el puesto de " + P[n].name + "."); r[n] = v; }
       if (new Set(Object.values(r)).size < 4) return renderResult("Hay dos jugadores con el mismo puesto.");
-      send(x => { x.mk = x.mk || {}; x.mk[i] = r; x.timerCmd = { match: "pause" }; });
+      send(x => { x.mk = x.mk || {}; x.mk[i] = r; x.timerCmd = { match: "pause" }; finishIfLast(x, "mk"); });
     };
   } else {
     const cur = (t.tennis || {})[i] || {};
@@ -1182,7 +1210,7 @@ function renderResult(msg) {
     save = () => {
       if (sc.a == null || sc.b == null) return renderResult("Marca los juegos de las dos parejas.");
       if (!((sc.a === 3) !== (sc.b === 3))) return renderResult("Una sola pareja debe tener 3 juegos.");
-      send(x => { x.tennis = x.tennis || {}; x.tennis[i] = { a: sc.a, b: sc.b }; x.timerCmd = { match: "pause" }; });
+      send(x => { x.tennis = x.tennis || {}; x.tennis[i] = { a: sc.a, b: sc.b }; x.timerCmd = { match: "pause" }; finishIfLast(x, "tennis"); });
     };
   }
   if (msg) box.append(h("p", { class: "note err" }, msg));
