@@ -194,13 +194,13 @@
     { theme: "mk", tag: "Juego 1", title: "Mario Kart · tus puntos", sections: [
       ["Tu carrera", "Mientras mejor llegues, más sumas: 1.º = 24 pts, 2.º = 23, 3.º = 22… (25 menos tu puesto)."],
       ["Versus", "Cada carrera es un versus entre 2 parejas. Se suman los puntos individuales de los dos: gana la pareja que sume más."],
-      ["Bono +3", "Si tu pareja gana el versus, cada uno recibe +3 puntos adicionales, individualmente. Ej.: si llegaste 3.º, te tocan 22 por tu puesto + 3 del bono = 25. Si las parejas empatan, no hay bono.", "gold"],
-      ["Al final", "Se suman tus 4 carreras. Empate: gana quien tenga más primeros puestos."]] },
+      ["Bono +3", "Si tu pareja gana el versus, cada uno recibe +3 puntos adicionales, individualmente. Ej.: si llegaste 3.º, te tocan 22 por tu puesto + 3 del bono = 25.", "gold"],
+      ["Al final", "Se suman tus 4 carreras. Si dos quedan con los mismos puntos, va adelante quien ganó más carreras."]] },
     { theme: "tennis", tag: "Juego 2", title: "Mario Tennis · tus puntos", sections: [
       ["Por juego", "Cada juego que gana tu pareja = 1 punto para ti y para tu compañero."],
       ["Ganar", "La pareja que gana el partido (la primera en llegar a 3 juegos) suma +3 cada uno."],
       ["Ejemplo", "Si ganan 3 a 1: cada ganador suma 3 + 3 = 6 y cada perdedor suma 1."],
-      ["Al final", "Se suman tus 4 partidos. Empate: gana quien tenga más partidos ganados."]] },
+      ["Al final", "Se suman tus 4 partidos. Si dos quedan con los mismos puntos, va adelante quien ganó más partidos."]] },
     { theme: "smash", tag: "Juego 3", title: "Smash Bros. · tus puntos", sections: [
       ["Formato", "Todos contra todos en llaves 1 vs 1: si pierdes, quedas eliminado. Juegan 11."],
       ["Puntos", "Según hasta dónde llegues: Campeón 12 · Subcampeón 11 · 3.º 10 · 4.º 9 · eliminado en cuartos 6,5 · eliminado en primera ronda 3."]] },
