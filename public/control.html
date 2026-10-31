@@ -263,6 +263,30 @@ setInterval(() => {
 }, 500);
 const VIEWS = [["auto", "Automático"], ["general", "Tabla general"], ["mk", "Ranking Kart"], ["tennis", "Ranking Tennis"], ["smash", "Smash"], ["partida", "Partida actual"], ["calendario", "Calendario"], ["podio", "Podio"]];
 
+/* ---------- Reiniciar (para pruebas) ---------- */
+let confirmReset = false, resetNumbers = false;
+function resetCard() {
+  const doReset = () => { change(w => {
+    w.mk = {}; w.tennis = {}; w.smash = {}; w.tb = { mk: {}, tennis: {} };
+    w.current = { game: "mk", match: 0 }; w.view = "auto";
+    w.countdown = { until: 0 }; w.countdownSeconds = 0;
+    if (resetNumbers) w.numbers = {};
+  }); confirmReset = false; resetNumbers = false; setStatus("Torneo reiniciado · puedes usar Deshacer si fue un error", "ok"); };
+  return h("div", { class: "card" },
+    h("h2", {}, "Reiniciar torneo"),
+    h("p", { class: "lead" }, "Para borrar las pruebas: deja en cero Mario Kart, Tennis, Smash, desempates y la cuenta regresiva, y vuelve a la partida 1. Los 13 jugadores y sus personajes no se tocan."),
+    confirmReset
+      ? h("div", { class: "grid", style: "gap:10px" },
+          h("label", { class: "confirm", style: "font-weight:700" },
+            h("input", { type: "checkbox", id: "reset-nums", checked: resetNumbers || null, onchange: e => { resetNumbers = e.target.checked; } }),
+            "También borrar los números del sorteo"),
+          h("div", { class: "confirm" },
+            h("span", { class: "warn" }, "¿Seguro? Se borran todos los resultados cargados."),
+            h("button", { class: "btn warn", onclick: doReset }, "Sí, reiniciar todo"),
+            h("button", { class: "btn", onclick: () => { confirmReset = false; resetNumbers = false; render(); } }, "Cancelar")))
+      : h("button", { class: "btn warn", onclick: () => { confirmReset = true; render(); } }, "Reiniciar torneo"));
+}
+
 /* ---------- Exportar ---------- */
 let shareText = null;
 function exportCard() {
@@ -315,7 +339,8 @@ function tabTx() {
           h("td", {}, C.generalRank[n]), h("td", {}, player(n).name),
           h("td", { class: "n" }, T.fmt(C.mk[n].gp)), h("td", { class: "n" }, T.fmt(C.tennis[n].gp)), h("td", { class: "n" }, T.fmt(C.smash[n].gp)),
           h("td", { class: "n" }, T.fmt(C.total[n])))))))),
-    exportCard()
+    exportCard(),
+    resetCard()
   );
 }
 function pairNames(pair) { return pair.map(n => player(n).name).join(" y "); }
@@ -482,7 +507,7 @@ function render() {
   scrollTo(0, y);
 }
 
-for (const b of document.querySelectorAll("#tabs button")) b.addEventListener("click", () => { tab = b.dataset.tab; try { localStorage.setItem("control-tab", tab); } catch {} confirmDraw = false; render(); });
+for (const b of document.querySelectorAll("#tabs button")) b.addEventListener("click", () => { tab = b.dataset.tab; try { localStorage.setItem("control-tab", tab); } catch {} confirmDraw = false; confirmReset = false; render(); });
 
 function showLogin(msg) { $("app").hidden = true; $("login").hidden = false; $("login-msg").textContent = msg || ""; $("login-msg").className = "msg err"; }
 $("login").addEventListener("submit", async e => {
