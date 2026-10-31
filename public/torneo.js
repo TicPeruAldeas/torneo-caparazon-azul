@@ -1,5 +1,7 @@
 // Torneo general de la tarde: calendario, puntajes y conexión en vivo (compartido por /marcador y /control)
 (function () {
+  // Respaldo para navegadores de tablets algo antiguas
+  if (!Element.prototype.replaceChildren) Element.prototype.replaceChildren = function () { while (this.firstChild) this.removeChild(this.firstChild); this.append.apply(this, arguments); };
   // Calendario de parejas rotativas (Mario Kart y Mario Tennis): [[pareja A], [pareja B]]
   const SCHEDULE = [
     [[3, 11], [8, 9]], [[1, 5], [6, 10]], [[2, 4], [7, 13]], [[6, 12], [1, 3]], [[8, 13], [2, 5]],

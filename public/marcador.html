@@ -190,6 +190,10 @@
   #fs { position: fixed; right: max(16px, env(safe-area-inset-right)); bottom: max(16px, env(safe-area-inset-bottom)); z-index: 5; font: 800 20px var(--cond); letter-spacing: .03em;
     padding: 12px 18px; border-radius: 14px; border: 3px solid var(--ink); background: var(--yellow); color: var(--ink); box-shadow: 0 4px 0 var(--ink); cursor: pointer; transition: opacity .4s; }
   #fs.hide { opacity: 0; pointer-events: none; }
+  #fs, #snd { touch-action: manipulation; -webkit-user-select: none; user-select: none; min-height: 52px; }
+  #toast { position: fixed; left: 50%; bottom: calc(max(16px, env(safe-area-inset-bottom)) + 20px); transform: translateX(-50%); z-index: 6; max-width: min(90vw, 760px);
+    font: 800 20px/1.3 var(--cond); text-align: center; background: var(--ink); color: #fff; border: 3px solid #fff; border-radius: 14px; padding: 12px 18px; box-shadow: 0 6px 0 rgba(0,0,0,.4); }
+  #oldbrowser { position: fixed; inset: 0; z-index: 9; display: grid; place-items: center; padding: 40px; text-align: center; font: 800 28px/1.4 var(--cond); background: var(--red); color: #fff; }
   #fs:focus-visible { outline: 4px solid #fff; outline-offset: 2px; }
 
   /* Calendario de parejas */
@@ -395,6 +399,8 @@
 </div>
 <button id="fs" type="button">Pantalla completa</button>
 <button id="snd" type="button">Sonido</button>
+<div id="toast" role="status" hidden></div>
+<div id="oldbrowser" hidden>Este navegador es muy antiguo para el marcador. Actualiza Chrome o Safari en la tablet, o ábrelo en otro dispositivo.</div>
 
 <script src="/torneo.js"></script>
 <script>
@@ -518,7 +524,7 @@ function viewGame(g) {
 
 function viewSmash() {
   const by = {};
-  for (const n of T.NUMS) { const st = C.smash[n].stage || "pend"; (by[st] ||= []).push(n); }
+  for (const n of T.NUMS) { const st = C.smash[n].stage || "pend"; (by[st] = by[st] || []).push(n); }
   const tier = (key, cls) => {
     const info = T.SMASH[key], list = by[key] || [];
     const slots = Array.from({ length: info.slots }, (_, i) => list[i]);
@@ -768,22 +774,33 @@ function draw(force) {
 
 const fsBtn = $("fs");
 let fsTimer = null;
+const canFs = !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
+const standalone = matchMedia("(display-mode: fullscreen), (display-mode: standalone)").matches || navigator.standalone === true;
 function showFsButton() {
   const isFs = document.fullscreenElement || document.webkitFullscreenElement;
   fsBtn.textContent = isFs ? "Salir de pantalla completa" : "Pantalla completa";
+  fsBtn.hidden = standalone;
   fsBtn.classList.remove("hide");
-  clearTimeout(fsTimer); fsTimer = setTimeout(() => fsBtn.classList.add("hide"), 4000);
+  clearTimeout(fsTimer); fsTimer = setTimeout(() => fsBtn.classList.add("hide"), 8000);
+}
+function toast(text) {
+  const t = $("toast"); t.textContent = text; t.hidden = false;
+  clearTimeout(toast.t); toast.t = setTimeout(() => { t.hidden = true; }, 6000);
 }
 fsBtn.addEventListener("click", async () => {
   const el = document.documentElement;
+  unlockAudio();
+  if (!canFs) { toast("Esta tablet no permite pantalla completa desde el navegador. En iPad: Compartir → Agregar a pantalla de inicio, y abre el marcador desde ese ícono."); return; }
   try {
     if (document.fullscreenElement || document.webkitFullscreenElement) await (document.exitFullscreen || document.webkitExitFullscreen).call(document);
     else await (el.requestFullscreen || el.webkitRequestFullscreen).call(el, { navigationUI: "hide" });
-  } catch {}
+  } catch (e) { toast("No se pudo activar la pantalla completa. Prueba girando la tablet o agregando el marcador a la pantalla de inicio."); }
   keepAwake();
   setTimeout(fit, 300);
 });
-addEventListener("pointerdown", showFsButton);
+function onTouch() { showFsButton(); showSnd(); keepAwake(); }
+for (const ev of ["pointerdown", "touchstart", "mousedown", "keydown"]) addEventListener(ev, onTouch, { passive: true });
+for (const ev of ["touchend", "click"]) addEventListener(ev, () => unlockAudio(), { passive: true });
 document.addEventListener("fullscreenchange", () => { fit(); showFsButton(); });
 showFsButton();
 let wakeLock = null;
@@ -791,7 +808,6 @@ async function keepAwake() {
   try { if ("wakeLock" in navigator && !wakeLock) { wakeLock = await navigator.wakeLock.request("screen"); wakeLock.addEventListener("release", () => { wakeLock = null; }); } } catch {}
 }
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") keepAwake(); });
-addEventListener("pointerdown", keepAwake, { once: true });
 keepAwake();
 
 // Sonidos estilo 8 bits, generados en el navegador (sin archivos)
@@ -800,7 +816,7 @@ try { soundOn = localStorage.getItem("marcador-sonido") !== "no"; } catch {}
 let actx = null;
 function audio() {
   if (!soundOn) return null;
-  try { actx ||= new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === "suspended") actx.resume(); } catch { return null; }
+  try { if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === "suspended") actx.resume(); } catch (e) { return null; }
   return actx;
 }
 function tone(freq, start, dur, type = "square", vol = .12) {
@@ -821,10 +837,19 @@ const SFX = {
 };
 const sndBtn = $("snd");
 function paintSnd() { sndBtn.textContent = soundOn ? "Sonido: activado" : "Sonido: apagado"; }
-sndBtn.addEventListener("click", () => { soundOn = !soundOn; try { localStorage.setItem("marcador-sonido", soundOn ? "si" : "no"); } catch {} paintSnd(); if (soundOn) SFX.coin(); });
+sndBtn.addEventListener("click", () => {
+  soundOn = !soundOn; try { localStorage.setItem("marcador-sonido", soundOn ? "si" : "no"); } catch (e) {}
+  paintSnd(); if (soundOn) { unlockAudio(); SFX.coin(); toast("Sonido activado"); } else toast("Sonido apagado");
+});
 paintSnd();
-addEventListener("pointerdown", () => { audio(); sndBtn.classList.remove("hide"); clearTimeout(sndBtn.t); sndBtn.t = setTimeout(() => sndBtn.classList.add("hide"), 4000); });
-sndBtn.t = setTimeout(() => sndBtn.classList.add("hide"), 4000);
+// iPad y algunos Android solo activan el audio al soltar el dedo: se reproduce un sonido mudo para desbloquearlo
+let audioUnlocked = false;
+function unlockAudio() {
+  const a = audio(); if (!a || audioUnlocked) return;
+  try { const b = a.createBuffer(1, 1, 22050), s = a.createBufferSource(); s.buffer = b; s.connect(a.destination); s.start(0); audioUnlocked = a.state === "running" || true; } catch (e) {}
+}
+function showSnd() { sndBtn.classList.remove("hide"); clearTimeout(sndBtn.t); sndBtn.t = setTimeout(() => sndBtn.classList.add("hide"), 8000); }
+sndBtn.t = setTimeout(() => sndBtn.classList.add("hide"), 8000);
 
 // Reloj de la cuenta regresiva: solo actualiza el número; al terminar vuelve a la vista normal
 let lastSec = null, cdActive = false;
@@ -916,6 +941,8 @@ T.connect((state, chars) => {
   draw(mode !== lastMode);
   lastMode = mode;
 }, ok => { $("live").classList.toggle("off", !ok); $("live").querySelector("span").textContent = ok ? "EN VIVO" : "RECONECTANDO"; });
+window.__marcadorOk = true;
 </script>
+<script>setTimeout(function () { if (!window.__marcadorOk) document.getElementById("oldbrowser").hidden = false; }, 2500);</script>
 </body>
 </html>

@@ -272,7 +272,7 @@ setInterval(() => {
 }, 500);
 /* Cronómetros: se aplican en el servidor; aquí se reflejan al instante */
 function timerLocal(w, key, cmd) {
-  w.timers ||= { match: { acc: 0, start: 0, running: false }, total: { acc: 0, start: 0, running: false } };
+  if (!w.timers) w.timers = { match: { acc: 0, start: 0, running: false }, total: { acc: 0, start: 0, running: false } };
   const tm = w.timers[key], now = T.serverNow();
   if (cmd === "start" && !tm.running) { tm.running = true; tm.start = now; }
   else if (cmd === "pause" && tm.running) { tm.acc += now - tm.start; tm.running = false; tm.start = 0; }
@@ -487,7 +487,7 @@ function mkCard(k) {
       const side = (label, pair, s) => h("div", { class: "pairbox" + (m.bonus === s ? " win" : "") },
         h("div", { class: "ph" }, h("span", {}, label), h("span", {}, m.complete ? `${s === "A" ? m.sumA : m.sumB} pts${m.bonus === s ? " · +3 bono" : ""}` : "")),
         pair.map(n => plRow(n, h("select", { "aria-label": `Posición de ${player(n).name}`, class: dup && posList.filter(x => x === m.res[n]).length > 1 ? "bad" : "",
-          onchange: e => change(w => { const v = +e.target.value; w.mk[k] ||= {}; if (v) w.mk[k][n] = v; else delete w.mk[k][n]; }) },
+          onchange: e => change(w => { const v = +e.target.value; w.mk[k] = w.mk[k] || {}; if (v) w.mk[k][n] = v; else delete w.mk[k][n]; }) },
           opts(m.res[n] || "", ["", ...Array.from({ length: 24 }, (_, x) => x + 1)], v => v === "" ? "—" : v + ".º")))));
       return h("div", { class: "card match" + (W.current.game === "mk" && W.current.match === k ? " cur" : "") },
         matchHead("mk", k, m.complete), side("Pareja A", A, "A"), side("Pareja B", B, "B"),
@@ -559,7 +559,7 @@ function tabTb() {
   const groups = g => {
     const st = C[g], key = n => `${st[n].pts}|${g === "mk" ? st[n].firsts : st[n].wins}`, by = {};
     if (!C.progress[g]) return [];
-    for (const n of T.NUMS) (by[key(n)] ||= []).push(n);
+    for (const n of T.NUMS) (by[key(n)] = by[key(n)] || []).push(n);
     return Object.values(by).filter(x => x.length > 1).sort((a, b) => st[a[0]].rank - st[b[0]].rank);
   };
   const section = g => {
