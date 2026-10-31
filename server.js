@@ -82,8 +82,45 @@ function publicState() {
   for (const [id, m] of Object.entries(state.media)) media[id] = { url: "/media/" + encodeURIComponent(m.file), type: m.type, uploaded: true };
   return {
     media,
-    picks: state.picks.map(({ token, ...p }) => p)
+    picks: state.picks.map(({ token, ...p }) => p),
+    tournament: state.tournament || emptyTournament()
   };
+}
+
+// Torneo de la tarde: números del sorteo, resultados de los 3 juegos y qué se ve en la transmisión
+const MATCHES = 13, PLAYERS = 13;
+const SMASH_STAGES = ["campeon", "sub", "tercero", "cuarto", "cuartos", "primera"];
+const VIEWS = ["auto", "general", "mk", "tennis", "smash", "partida"];
+const GAMES = ["mk", "tennis", "smash"];
+function emptyTournament() {
+  return { numbers: {}, mk: {}, tennis: {}, smash: {}, tb: { mk: {}, tennis: {} }, view: "auto", current: { game: "mk", match: 0 } };
+}
+const intIn = (v, lo, hi) => Number.isInteger(v) && v >= lo && v <= hi;
+const obj = v => (v && typeof v === "object" && !Array.isArray(v)) ? v : {};
+
+function sanitizeTournament(input) {
+  const t = obj(input), out = emptyTournament();
+  const pickIds = new Set(state.picks.map(p => p.id)), usedNums = new Set();
+  for (const [id, n] of Object.entries(obj(t.numbers))) {
+    if (pickIds.has(id) && intIn(n, 1, PLAYERS) && !usedNums.has(n)) { out.numbers[id] = n; usedNums.add(n); }
+  }
+  for (const [m, res] of Object.entries(obj(t.mk))) {
+    if (!intIn(+m, 0, MATCHES - 1)) continue;
+    const r = {};
+    for (const [num, pos] of Object.entries(obj(res))) if (intIn(+num, 1, PLAYERS) && intIn(pos, 1, 24)) r[num] = pos;
+    if (Object.keys(r).length) out.mk[m] = r;
+  }
+  for (const [m, res] of Object.entries(obj(t.tennis))) {
+    const r = obj(res);
+    if (intIn(+m, 0, MATCHES - 1) && intIn(r.a, 0, 3) && intIn(r.b, 0, 3)) out.tennis[m] = { a: r.a, b: r.b };
+  }
+  for (const [num, stage] of Object.entries(obj(t.smash))) if (intIn(+num, 1, PLAYERS) && SMASH_STAGES.includes(stage)) out.smash[num] = stage;
+  for (const g of ["mk", "tennis"]) for (const [num, v] of Object.entries(obj(obj(t.tb)[g]))) if (intIn(+num, 1, PLAYERS) && intIn(v, 1, 99)) out.tb[g][num] = v;
+  if (VIEWS.includes(t.view)) out.view = t.view;
+  const cur = obj(t.current);
+  if (GAMES.includes(cur.game)) out.current.game = cur.game;
+  if (intIn(cur.match, 0, MATCHES - 1)) out.current.match = cur.match;
+  return out;
 }
 
 const clients = new Set();
@@ -151,6 +188,15 @@ app.delete("/api/pick/:id", (req, res) => {
 });
 
 app.post("/api/admin/login", requireAdmin, (req, res) => res.json({ ok: true }));
+
+app.put("/api/admin/tournament", requireAdmin, (req, res) => {
+  state.tournament = sanitizeTournament(req.body);
+  save(); broadcast();
+  res.json({ ok: true, tournament: state.tournament });
+});
+
+app.get("/marcador", (req, res) => res.sendFile(path.join(__dirname, "public", "marcador.html")));
+app.get("/control", (req, res) => res.sendFile(path.join(__dirname, "public", "control.html")));
 
 function removeMediaFile(charId) {
   const old = state.media[charId];

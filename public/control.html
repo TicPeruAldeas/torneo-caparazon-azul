@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Control · Torneo Caparazón Azul</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow+Condensed:wght@600;700;800&family=Figtree:wght@400;600;800&display=swap">
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0A0F27; --panel: #121B42; --panel-2: #18235A; --line: #2A3784; --ink: #F2F5FF; --muted: #9AA5DD;
+    --shell: #3D6BFF; --shell-hi: #7FA2FF; --gold: #FFC93C; --ok: #39E58C; --err: #FF5C7A;
+    --mk: #FF3355; --tennis: #C6F33A; --smash: #FF9B2F; --focus: #FFC93C;
+    --display: "Bungee", "Arial Black", Impact, sans-serif;
+    --cond: "Barlow Condensed", "Arial Narrow", sans-serif;
+    --body: "Figtree", "Segoe UI", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.45;
+    padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  [hidden] { display: none !important; }
+  .wrap { max-width: 1240px; margin: 0 auto; padding-inline: 16px; padding-block: 0 60px; }
+  .flag { height: 12px; background: conic-gradient(#F2F5FF 25%, #0A0F27 0 50%, #F2F5FF 0 75%, #0A0F27 0) 0 0 / 12px 12px; }
+  header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; padding-block: 18px; }
+  header h1 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(20px, 3vw, 28px); }
+  header h1 span { color: var(--shell-hi); }
+  .status { font-size: 13px; color: var(--muted); }
+  .status.saving { color: var(--gold); } .status.err { color: var(--err); } .status.ok { color: var(--ok); }
+  .grow { margin-left: auto; display: flex; gap: 10px; flex-wrap: wrap; }
+  a.btn, button { font: inherit; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; cursor: pointer; border-radius: 10px; padding: 10px 16px; border: 2px solid var(--line); background: var(--panel); color: var(--ink); text-decoration: none; }
+  .btn.primary { background: var(--shell); border-color: var(--shell); }
+  .btn.warn { border-color: var(--err); color: var(--err); background: transparent; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  button:focus-visible, select:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+  nav.tabs { display: flex; gap: 6px; overflow-x: auto; border-bottom: 2px solid var(--line); margin-bottom: 18px; }
+  nav.tabs button { flex: none; cursor: pointer; background: none; border: 0; color: var(--muted); font-family: var(--cond); font-size: 20px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 10px 14px; border-bottom: 4px solid transparent; margin-bottom: -2px; }
+  nav.tabs button[aria-selected="true"] { color: var(--ink); border-color: var(--tc, var(--shell)); }
+  nav.tabs [data-tab="mk"] { --tc: var(--mk); } nav.tabs [data-tab="tennis"] { --tc: var(--tennis); } nav.tabs [data-tab="smash"] { --tc: var(--smash); }
+
+  h2 { font-family: var(--cond); font-size: 26px; font-weight: 800; margin: 0 0 4px; letter-spacing: .02em; }
+  .lead { color: var(--muted); margin: 0 0 16px; max-width: 75ch; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
+  .grid { display: grid; gap: 14px; }
+  .cols-2 { grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr)); }
+  .cols-3 { grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
+  .seg { display: flex; flex-wrap: wrap; gap: 8px; }
+  .seg button { cursor: pointer; border: 2px solid var(--line); background: var(--panel-2); color: var(--ink); border-radius: 10px; padding: 10px 14px; font-weight: 700; }
+  .seg button[aria-pressed="true"] { background: var(--shell); border-color: var(--shell); }
+  .label { font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 14px 0 8px; }
+  .label:first-child { margin-top: 0; }
+
+  .pl { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+  .av { width: 40px; height: 40px; border-radius: 8px; background: #fff; overflow: hidden; display: grid; place-items: center; font-family: var(--display); font-size: 14px; color: #0A0F27; flex: none; }
+  .av img { width: 100%; height: 100%; object-fit: contain; }
+  .pl b { display: block; font-size: 15px; overflow-wrap: anywhere; }
+  .pl small { color: var(--muted); font-size: 12px; }
+  select { font: inherit; font-weight: 700; background: var(--panel-2); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; min-width: 72px; }
+  select.bad { border-color: var(--err); color: var(--err); }
+
+  .match { display: grid; gap: 10px; }
+  .match.cur { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
+  .mh { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .mh h3 { margin: 0; font-family: var(--cond); font-size: 22px; font-weight: 800; }
+  .mh .chip { font-size: 12px; font-weight: 800; padding: 3px 8px; border-radius: 6px; background: var(--panel-2); color: var(--muted); }
+  .mh .chip.done { background: rgba(57,229,140,.15); color: var(--ok); }
+  .mh .chip.cur { background: var(--gold); color: #0A0F27; }
+  .mh .sp { margin-left: auto; }
+  .mh button.mini { cursor: pointer; font-size: 12px; font-weight: 800; border: 1px solid var(--line); background: none; color: var(--muted); border-radius: 6px; padding: 4px 8px; }
+  .pairbox { border: 1px solid var(--line); border-radius: 10px; padding: 10px; display: grid; gap: 8px; }
+  .pairbox.win { border-color: var(--gold); }
+  .pairbox .ph { display: flex; justify-content: space-between; font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .pairbox.win .ph { color: var(--gold); }
+  .warn { color: var(--err); font-size: 13px; font-weight: 600; }
+  .tscore { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto minmax(0, 1fr); gap: 10px; align-items: center; }
+  .tscore .names { font-weight: 700; font-size: 14px; overflow-wrap: anywhere; }
+  .tscore .names.r { text-align: right; }
+  .tscore .dash { font-family: var(--display); color: var(--muted); }
+
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--line); }
+  th { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  td.n { text-align: right; font-weight: 800; }
+  .tablewrap { overflow-x: auto; }
+  .summary { display: flex; gap: 10px; flex-wrap: wrap; }
+  .summary span { padding: 6px 10px; border-radius: 8px; background: var(--panel-2); font-weight: 700; font-size: 13px; }
+  .summary span.ok { color: var(--ok); } .summary span.bad { color: var(--err); }
+
+  .login { max-width: 380px; margin: 60px auto; display: grid; gap: 12px; }
+  .login input { font: inherit; font-size: 16px; padding: 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); }
+  .msg { font-size: 14px; } .msg.err { color: var(--err); }
+  .confirm { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+<div class="flag"></div>
+<div class="wrap">
+  <header>
+    <h1>Control · <span>Torneo Caparazón Azul</span></h1>
+    <span class="status" id="status" role="status" aria-live="polite">Conectando…</span>
+    <div class="grow">
+      <a class="btn" href="/marcador" target="_blank" rel="noopener">Abrir marcador</a>
+      <a class="btn" href="/" target="_blank" rel="noopener">Elegir personaje</a>
+    </div>
+  </header>
+
+  <form class="login card" id="login" hidden>
+    <h2>Modo organizador</h2>
+    <p class="lead">Escribe la contraseña de organizador para cargar resultados.</p>
+    <input type="password" id="pass" placeholder="Contraseña" autocomplete="current-password">
+    <button class="btn primary" type="submit">Entrar</button>
+    <span class="msg" id="login-msg"></span>
+  </form>
+
+  <div id="app" hidden>
+    <nav class="tabs" role="tablist" id="tabs">
+      <button data-tab="tx" role="tab">Transmisión</button>
+      <button data-tab="players" role="tab">Jugadores</button>
+      <button data-tab="mk" role="tab">Mario Kart</button>
+      <button data-tab="tennis" role="tab">Tennis</button>
+      <button data-tab="smash" role="tab">Smash</button>
+      <button data-tab="tb" role="tab">Desempates</button>
+    </nav>
+    <section id="panel"></section>
+  </div>
+</div>
+
+<script src="/torneo.js"></script>
+<script>
+const T = window.Torneo;
+const $ = id => document.getElementById(id);
+function h(tag, props = {}, ...kids) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (k === "class") el.className = v;
+    else if (k === "style") el.setAttribute("style", v);
+    else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+    else if (v === true) el.setAttribute(k, "");
+    else if (v !== false && v != null) el.setAttribute(k, v);
+  }
+  for (const kid of kids.flat()) if (kid != null && kid !== false) el.append(kid);
+  return el;
+}
+function ss(k, v) { try { if (v === undefined) return sessionStorage.getItem(k); v == null ? sessionStorage.removeItem(k) : sessionStorage.setItem(k, v); } catch { return null; } }
+
+let S = null, CH = null, W = null, pass = ss("torneo-admin"), tab = "tx", dirty = false, saveTimer = null, confirmDraw = false;
+try { tab = localStorage.getItem("control-tab") || "tx"; } catch {}
+
+function setStatus(text, kind = "") { const s = $("status"); s.textContent = text; s.className = "status " + kind; }
+
+// Guardado: copia local W, se envía completa con pequeña espera
+function change(mut) {
+  mut(W); dirty = true; setStatus("Guardando…", "saving"); render();
+  clearTimeout(saveTimer); saveTimer = setTimeout(save, 350);
+}
+async function save() {
+  try {
+    const res = await fetch("/api/admin/tournament", { method: "PUT", headers: { "Content-Type": "application/json", "x-admin-password": pass }, body: JSON.stringify(W) });
+    const data = await res.json().catch(() => ({}));
+    if (res.status === 401) { pass = null; ss("torneo-admin", null); showLogin("La contraseña cambió. Vuelve a entrar."); return; }
+    if (!res.ok) throw new Error(data.error);
+    dirty = false; setStatus("Guardado · el marcador ya está actualizado", "ok");
+  } catch (e) { setStatus("No se pudo guardar. Revisa la conexión; se reintenta con el próximo cambio.", "err"); }
+}
+
+function player(n) { return T.playersByNum({ ...S, tournament: W })[n]; }
+function av(p) {
+  const c = p.character && CH.charById[p.character], m = S.media?.[p.character];
+  const box = h("span", { class: "av" });
+  if (m?.url && !(m.type || "").startsWith("video/")) box.append(h("img", { src: m.url, alt: "" }));
+  else { box.append(c ? c.short : String(p.num)); if (c) box.style.background = c.sig[0]; }
+  return box;
+}
+function plRow(n, extra) {
+  const p = player(n), c = p.character && CH.charById[p.character];
+  return h("div", { class: "pl" }, av(p), h("div", {}, h("b", {}, p.name), h("small", {}, `#${n} · ${c ? c.name : "sin personaje"}`)), extra || h("span"));
+}
+function opts(sel, values, labelFn) {
+  return values.map(v => { const o = h("option", { value: v }, labelFn ? labelFn(v) : String(v)); if (String(v) === String(sel ?? "")) o.selected = true; return o; });
+}
+
+/* ---------- Transmisión ---------- */
+function tabTx() {
+  const C = T.compute({ ...S, tournament: W });
+  const views = [["auto", "Automático (rota cada 15 s)"], ["general", "Tabla general"], ["mk", "Ranking Mario Kart"], ["tennis", "Ranking Tennis"], ["smash", "Smash"], ["partida", "Partida actual"]];
+  const g = W.current.game, i = W.current.match;
+  const [A, B] = T.SCHEDULE[i];
+  return h("div", { class: "grid cols-2" },
+    h("div", { class: "card" },
+      h("div", { class: "label" }, "¿Qué se ve en la transmisión?"),
+      h("div", { class: "seg" }, views.map(([v, l]) => h("button", { "aria-pressed": String(W.view === v), onclick: () => change(w => { w.view = v; }) }, l))),
+      h("div", { class: "label" }, "Juego en curso"),
+      h("div", { class: "seg" }, ["mk", "tennis", "smash"].map(x => h("button", { "aria-pressed": String(g === x), onclick: () => change(w => { w.current.game = x; }) }, T.GAME_NAMES[x]))),
+      g !== "smash" ? [
+        h("div", { class: "label" }, "Partida en curso"),
+        h("div", { class: "seg" },
+          h("button", { disabled: i === 0, onclick: () => change(w => { w.current.match = i - 1; }) }, "◀ Anterior"),
+          h("select", { "aria-label": "Partida", onchange: e => change(w => { w.current.match = +e.target.value; }) }, opts(i, T.SCHEDULE.map((_, k) => k), k => `Partida ${k + 1}`)),
+          h("button", { disabled: i === 12, onclick: () => change(w => { w.current.match = i + 1; }) }, "Siguiente ▶")),
+        h("p", { class: "lead", style: "margin-top:10px" }, `${pairNames(A)} vs ${pairNames(B)}`)
+      ] : null),
+    h("div", { class: "card" },
+      h("div", { class: "label" }, "Avance"),
+      h("div", { class: "summary" },
+        h("span", {}, `Mario Kart ${C.progress.mk}/13`), h("span", {}, `Tennis ${C.progress.tennis}/13`), h("span", {}, `Smash ${C.progress.smash}/13`)),
+      h("div", { class: "label" }, "Clasificación general"),
+      h("div", { class: "tablewrap" }, h("table", {},
+        h("thead", {}, h("tr", {}, h("th", {}, "Pos"), h("th", {}, "Jugador"), h("th", {}, "Kart"), h("th", {}, "Tennis"), h("th", {}, "Smash"), h("th", {}, "Total"))),
+        h("tbody", {}, C.generalOrder.map(n => h("tr", {},
+          h("td", {}, C.generalRank[n]), h("td", {}, player(n).name),
+          h("td", { class: "n" }, T.fmt(C.mk[n].gp)), h("td", { class: "n" }, T.fmt(C.tennis[n].gp)), h("td", { class: "n" }, T.fmt(C.smash[n].gp)),
+          h("td", { class: "n" }, T.fmt(C.total[n]))))))))
+  );
+}
+function pairNames(pair) { return pair.map(n => player(n).name).join(" y "); }
+
+/* ---------- Jugadores ---------- */
+function tabPlayers() {
+  const picks = [...S.picks].sort((a, b) => (W.numbers[a.id] || 99) - (W.numbers[b.id] || 99) || a.at - b.at);
+  const assigned = Object.keys(W.numbers).length;
+  const setNum = (pickId, n) => change(w => {
+    const other = Object.keys(w.numbers).find(id => w.numbers[id] === n && id !== pickId);
+    const old = w.numbers[pickId];
+    if (other) { if (old) w.numbers[other] = old; else delete w.numbers[other]; }
+    if (n) w.numbers[pickId] = n; else delete w.numbers[pickId];
+  });
+  const draw = () => change(w => {
+    const nums = T.NUMS.slice();
+    for (let i = nums.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [nums[i], nums[j]] = [nums[j], nums[i]]; }
+    w.numbers = {};
+    S.picks.slice(0, 13).forEach((p, k) => { w.numbers[p.id] = nums[k]; });
+    confirmDraw = false;
+  });
+  const hasResults = Object.keys(W.mk).length + Object.keys(W.tennis).length + Object.keys(W.smash).length > 0;
+  return h("div", { class: "grid" },
+    h("div", { class: "card" },
+      h("h2", {}, "Números del sorteo"),
+      h("p", { class: "lead" }, `Cada jugador tiene un número del 1 al 13; con ese número entra en el calendario de parejas. Asignados: ${assigned}/13. Si eliges un número que ya tiene otro jugador, se intercambian.`),
+      confirmDraw
+        ? h("div", { class: "confirm" }, h("span", { class: "warn" }, hasResults ? "Ya hay resultados cargados: un sorteo nuevo cambia quién jugó cada partida." : "Se reemplazan los números actuales."),
+            h("button", { class: "btn warn", onclick: draw }, "Sí, sortear de nuevo"), h("button", { class: "btn", onclick: () => { confirmDraw = false; render(); } }, "Cancelar"))
+        : h("button", { class: "btn primary", onclick: () => { if (assigned) { confirmDraw = true; render(); } else draw(); } }, "Sortear números al azar")),
+    h("div", { class: "grid cols-3" }, picks.map(p => h("div", { class: "card" }, plRowPick(p,
+      h("select", { "aria-label": `Número de ${p.name}`, onchange: e => setNum(p.id, +e.target.value || null) }, opts(W.numbers[p.id] || "", ["", ...T.NUMS], v => v === "" ? "—" : "#" + v)))))),
+    h("div", { class: "card" }, h("h2", {}, "Calendario de parejas"),
+      h("div", { class: "tablewrap" }, h("table", {}, h("tbody", {}, T.SCHEDULE.map(([A, B], k) => h("tr", {},
+        h("td", {}, `Partida ${k + 1}`), h("td", {}, `(${A.join("-")}) ${pairNames(A)}`), h("td", {}, "vs"), h("td", {}, `(${B.join("-")}) ${pairNames(B)}`))))))));
+}
+function plRowPick(p, extra) {
+  const c = CH.charById[p.character];
+  return h("div", { class: "pl" }, av({ ...p, num: "?" }), h("div", {}, h("b", {}, p.name), h("small", {}, c ? c.name : "")), extra);
+}
+
+/* ---------- Mario Kart ---------- */
+function matchHead(g, k, done) {
+  const cur = W.current.game === g && W.current.match === k;
+  return h("div", { class: "mh" }, h("h3", {}, `Partida ${k + 1}`),
+    done ? h("span", { class: "chip done" }, "Completa") : null,
+    cur ? h("span", { class: "chip cur" }, "En pantalla") : null,
+    h("span", { class: "sp" }),
+    !cur ? h("button", { class: "mini", onclick: () => change(w => { w.current = { game: g, match: k }; }) }, "Poner en pantalla") : null);
+}
+function tabMk() {
+  const C = T.compute({ ...S, tournament: W });
+  return h("div", { class: "grid" },
+    h("p", { class: "lead" }, "Anota la posición final (1 a 24) de cada jugador apenas salga la pantalla de resultados. Puntos = 25 − posición; la pareja que sume más gana +3 cada uno (si empatan, no hay bono)."),
+    h("div", { class: "grid cols-2" }, T.SCHEDULE.map(([A, B], k) => {
+      const m = T.mkMatch(W, k);
+      const posList = [...A, ...B].map(n => m.res[n]).filter(Boolean);
+      const dup = posList.length !== new Set(posList).size;
+      const side = (label, pair, s) => h("div", { class: "pairbox" + (m.bonus === s ? " win" : "") },
+        h("div", { class: "ph" }, h("span", {}, label), h("span", {}, m.complete ? `${s === "A" ? m.sumA : m.sumB} pts${m.bonus === s ? " · +3 bono" : ""}` : "")),
+        pair.map(n => plRow(n, h("select", { "aria-label": `Posición de ${player(n).name}`, class: dup && posList.filter(x => x === m.res[n]).length > 1 ? "bad" : "",
+          onchange: e => change(w => { const v = +e.target.value; w.mk[k] ||= {}; if (v) w.mk[k][n] = v; else delete w.mk[k][n]; }) },
+          opts(m.res[n] || "", ["", ...Array.from({ length: 24 }, (_, x) => x + 1)], v => v === "" ? "—" : v + ".º")))));
+      return h("div", { class: "card match" + (W.current.game === "mk" && W.current.match === k ? " cur" : "") },
+        matchHead("mk", k, m.complete), side("Pareja A", A, "A"), side("Pareja B", B, "B"),
+        dup ? h("span", { class: "warn" }, "Hay dos jugadores con la misma posición.") : null);
+    })),
+    rankTable("mk", C));
+}
+
+/* ---------- Tennis ---------- */
+function tabTennis() {
+  const C = T.compute({ ...S, tournament: W });
+  return h("div", { class: "grid" },
+    h("p", { class: "lead" }, "Anota los juegos que ganó cada pareja (sets a 3 juegos). Cada integrante suma 1 punto por juego ganado y +3 si su pareja gana el partido."),
+    h("div", { class: "grid cols-2" }, T.SCHEDULE.map(([A, B], k) => {
+      const m = T.tennisMatch(W, k), r = W.tennis[k] || {};
+      const set = (key) => e => change(w => {
+        const v = e.target.value === "" ? null : +e.target.value;
+        const cur = { a: w.tennis[k]?.a ?? null, b: w.tennis[k]?.b ?? null, [key]: v };
+        if (cur.a == null && cur.b == null) delete w.tennis[k];
+        else w.tennis[k] = { a: cur.a ?? 0, b: cur.b ?? 0 };
+      });
+      const invalid = r.a != null && !m.complete;
+      return h("div", { class: "card match" + (W.current.game === "tennis" && W.current.match === k ? " cur" : "") },
+        matchHead("tennis", k, m.complete),
+        h("div", { class: "tscore" },
+          h("span", { class: "names" }, pairNames(A)),
+          h("select", { "aria-label": "Juegos pareja A", onchange: set("a") }, opts(r.a ?? "", ["", 0, 1, 2, 3], v => v === "" ? "—" : v)),
+          h("span", { class: "dash" }, "-"),
+          h("select", { "aria-label": "Juegos pareja B", onchange: set("b") }, opts(r.b ?? "", ["", 0, 1, 2, 3], v => v === "" ? "—" : v)),
+          h("span", { class: "names r" }, pairNames(B))),
+        m.complete ? h("span", { class: "status ok" }, `Gana ${pairNames(m.winner === "A" ? A : B)}`) : null,
+        invalid ? h("span", { class: "warn" }, "Una pareja debe llegar a 3 juegos para cerrar el partido.") : null);
+    })),
+    rankTable("tennis", C));
+}
+
+function rankTable(g, C) {
+  const order = g === "mk" ? C.mkOrder : C.tennisOrder, st = C[g];
+  return h("div", { class: "card" }, h("h2", {}, `Ranking ${T.GAME_SHORT[g]}`),
+    h("div", { class: "tablewrap" }, h("table", {},
+      h("thead", {}, h("tr", {}, h("th", {}, "Pos"), h("th", {}, "Jugador"), h("th", {}, "Jugadas"), h("th", {}, g === "mk" ? "1.º puestos" : "Victorias"), h("th", {}, "Puntos"), h("th", {}, "Pts. generales"))),
+      h("tbody", {}, order.map(n => h("tr", {},
+        h("td", {}, C.progress[g] ? st[n].rank + (st[n].tied ? "=" : "") : "–"), h("td", {}, player(n).name),
+        h("td", { class: "n" }, `${st[n].played}/4`), h("td", { class: "n" }, g === "mk" ? st[n].firsts : st[n].wins),
+        h("td", { class: "n" }, st[n].pts), h("td", { class: "n" }, T.fmt(st[n].gp))))))));
+}
+
+/* ---------- Smash ---------- */
+function tabSmash() {
+  const counts = {};
+  for (const n of T.NUMS) if (W.smash[n]) counts[W.smash[n]] = (counts[W.smash[n]] || 0) + 1;
+  return h("div", { class: "grid" },
+    h("p", { class: "lead" }, "Marca hasta dónde llegó cada jugador en el torneo 1 vs 1. Los puntos generales salen directo de la etapa."),
+    h("div", { class: "summary" }, Object.entries(T.SMASH).map(([k, s]) => {
+      const c = counts[k] || 0;
+      return h("span", { class: c === s.slots ? "ok" : c > s.slots ? "bad" : "" }, `${s.label}: ${c}/${s.slots}`);
+    })),
+    h("div", { class: "grid cols-3" }, T.NUMS.map(n => h("div", { class: "card" }, plRow(n,
+      h("select", { "aria-label": `Etapa de ${player(n).name}`, onchange: e => change(w => { if (e.target.value) w.smash[n] = e.target.value; else delete w.smash[n]; }) },
+        opts(W.smash[n] || "", ["", ...Object.keys(T.SMASH)], v => v === "" ? "Sin resultado" : `${T.SMASH[v].label} (${T.fmt(T.SMASH[v].pts)})`)))))));
+}
+
+/* ---------- Desempates ---------- */
+function tabTb() {
+  const C = T.compute({ ...S, tournament: { ...W, tb: { mk: {}, tennis: {} } } });
+  const groups = g => {
+    const st = C[g], key = n => `${st[n].pts}|${g === "mk" ? st[n].firsts : st[n].wins}`, by = {};
+    if (!C.progress[g]) return [];
+    for (const n of T.NUMS) (by[key(n)] ||= []).push(n);
+    return Object.values(by).filter(x => x.length > 1).sort((a, b) => st[a[0]].rank - st[b[0]].rank);
+  };
+  const section = g => {
+    const gs = groups(g);
+    return h("div", { class: "card" }, h("h2", {}, T.GAME_SHORT[g]),
+      gs.length ? gs.map(list => h("div", { class: "grid", style: "margin-top:10px" },
+        h("div", { class: "label" }, `Empatados en el puesto ${C[g][list[0]].rank} · ${C[g][list[0]].pts} pts`),
+        list.map(n => plRow(n, h("select", { "aria-label": `Desempate de ${player(n).name}`, onchange: e => change(w => { const v = +e.target.value; if (v) w.tb[g][n] = v; else delete w.tb[g][n]; }) },
+          opts(W.tb[g][n] || "", ["", ...list.map((_, i) => i + 1)], v => v === "" ? "Comparten" : `Queda ${v}.º`))))))
+        : h("p", { class: "lead" }, "No hay empates por resolver."));
+  };
+  return h("div", { class: "grid" },
+    h("p", { class: "lead" }, "Aquí solo aparecen los empates que siguen después del desempate de reglas (más 1.º puestos en Mario Kart, más victorias en Tennis). Si juegan la partida extra o el tie-break, marca el orden; si no, comparten los puntos generales."),
+    h("div", { class: "grid cols-2" }, section("mk"), section("tennis")));
+}
+
+function render() {
+  if (!S || !CH || !W) return;
+  for (const b of document.querySelectorAll("#tabs button")) b.setAttribute("aria-selected", String(b.dataset.tab === tab));
+  const fn = { tx: tabTx, players: tabPlayers, mk: tabMk, tennis: tabTennis, smash: tabSmash, tb: tabTb }[tab] || tabTx;
+  const y = scrollY;
+  $("panel").replaceChildren(fn());
+  scrollTo(0, y);
+}
+
+for (const b of document.querySelectorAll("#tabs button")) b.addEventListener("click", () => { tab = b.dataset.tab; try { localStorage.setItem("control-tab", tab); } catch {} confirmDraw = false; render(); });
+
+function showLogin(msg) { $("app").hidden = true; $("login").hidden = false; $("login-msg").textContent = msg || ""; $("login-msg").className = "msg err"; }
+$("login").addEventListener("submit", async e => {
+  e.preventDefault();
+  const p = $("pass").value;
+  const res = await fetch("/api/admin/login", { method: "POST", headers: { "x-admin-password": p } });
+  if (res.ok) { pass = p; ss("torneo-admin", p); $("pass").value = ""; start(); }
+  else { const d = await res.json().catch(() => ({})); showLogin(d.error || "No se pudo entrar."); }
+});
+
+let started = false;
+async function start() {
+  $("login").hidden = true; $("app").hidden = false;
+  if (started) { render(); return; }
+  started = true;
+  await T.connect((state, chars) => {
+    CH = chars; S = state;
+    // Si hay cambios propios sin guardar, no se pisan con lo que llega
+    if (!dirty) W = JSON.parse(JSON.stringify(state.tournament));
+    const a = document.activeElement;
+    if (!(a && a.tagName === "SELECT" && $("panel").contains(a))) render();
+  }, ok => { if (!dirty) setStatus(ok ? "Conectado · en vivo" : "Reconectando…", ok ? "ok" : "err"); });
+}
+
+(async () => {
+  if (pass) {
+    const res = await fetch("/api/admin/login", { method: "POST", headers: { "x-admin-password": pass } });
+    if (res.ok) return start();
+    pass = null; ss("torneo-admin", null);
+  }
+  showLogin();
+})();
+</script>
+</body>
+</html>
