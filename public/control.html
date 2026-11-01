@@ -566,17 +566,24 @@ function rankTable(g, C) {
 
 /* ---------- Smash ---------- */
 function tabSmash() {
-  const counts = {};
+  const counts = {}, C = T.compute({ ...S, tournament: W });
   for (const n of T.NUMS) if (W.smash[n]) counts[W.smash[n]] = (counts[W.smash[n]] || 0) + 1;
   return h("div", { class: "grid" },
     h("p", { class: "lead" }, "Marca hasta dónde llegó cada jugador en el torneo 1 vs 1. Los puntos generales salen directo de la etapa."),
     h("div", { class: "summary" }, Object.entries(T.SMASH).map(([k, s]) => {
       const c = counts[k] || 0;
-      return h("span", { class: c === s.slots ? "ok" : c > s.slots ? "bad" : "" }, `${s.label}: ${c}/${s.slots}`);
+      const max = C.smashSlots(k);
+      return h("span", { class: c === max ? "ok" : c > max ? "bad" : "" }, `${s.label}: ${c}/${max}`);
     })),
-    h("div", { class: "grid cols-3" }, T.NUMS.map(n => h("div", { class: "card" }, plRow(n, player(n).noSmash ? h("span", { class: "chip" }, "No juega Smash") :
-      h("select", { "aria-label": `Etapa de ${player(n).name}`, onchange: e => change(w => { if (e.target.value) w.smash[n] = e.target.value; else delete w.smash[n]; }) },
-        opts(W.smash[n] || "", ["", ...Object.keys(T.SMASH)], v => v === "" ? "Sin resultado" : `${T.SMASH[v].label} (${T.fmt(T.SMASH[v].pts)})`)))))));
+    h("p", { class: "lead" }, `Juegan Smash: ${C.progress.smashTotal} de ${T.PLAYERS}. Para sumar o sacar a alguien, usa «Juega Smash» en su tarjeta.`),
+    h("div", { class: "grid cols-3" }, T.NUMS.map(n => h("div", { class: "card" }, plRow(n, smashCard(n))))));
+}
+function smashCard(n) {
+  const p = player(n), pick = S.picks.find(x => x.id === p.pickId);
+  const toggle = pick ? smashToggle(pick) : null;
+  if (p.noSmash) return h("div", {}, h("span", { class: "chip" }, "No juega Smash"), toggle);
+  return h("div", {}, h("select", { "aria-label": `Etapa de ${player(n).name}`, onchange: e => change(w => { if (e.target.value) w.smash[n] = e.target.value; else delete w.smash[n]; }) },
+        opts(W.smash[n] || "", ["", ...Object.keys(T.SMASH)], v => v === "" ? "Sin resultado" : `${T.SMASH[v].label} (${T.fmt(T.SMASH[v].pts)})`)), toggle);
 }
 
 /* ---------- Desempates ---------- */

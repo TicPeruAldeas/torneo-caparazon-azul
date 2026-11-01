@@ -117,7 +117,8 @@
     const generalOrder = [...NUMS].sort((a, b) => total[b] - total[a] || a - b);
     const generalRank = {};
     generalOrder.forEach((n, i) => { generalRank[n] = i > 0 && total[n] === total[generalOrder[i - 1]] ? generalRank[generalOrder[i - 1]] : i + 1; });
-    return { mk, tennis, smash, total, mkOrder, tennisOrder, generalOrder, generalRank, smashIn, progress: { mk: mkDone, tennis: tennisDone, smash: smashDone, smashTotal: smashIn.length } };
+    const smashSlots = k => k === "primera" ? Math.max(0, smashIn.length - 8) : SMASH[k].slots;
+    return { mk, tennis, smash, total, mkOrder, tennisOrder, generalOrder, generalRank, smashIn, smashSlots, progress: { mk: mkDone, tennis: tennisDone, smash: smashDone, smashTotal: smashIn.length } };
   }
 
   const matchDone = (t, g, i) => g === "mk" ? mkMatch(t, i).complete : tennisMatch(t, i).complete;
@@ -204,7 +205,7 @@
       example: { title: "Ejemplo: el partido termina 3 a 2", head: ["", "Juegos ganados", "Bono", "Puntos para cada uno"],
         rows: [["Pareja que gana", "3", "+3", "6"], ["Pareja que pierde", "2", "—", "2"]] } },
     { theme: "smash", tag: "Juego 3", title: "Smash Bros. · tus puntos", sections: [
-      ["Formato", "Todos contra todos en llaves 1 vs 1: si pierdes, quedas eliminado. Juegan 11."],
+      ["Formato", "Todos contra todos en llaves 1 vs 1: si pierdes, quedas eliminado."],
       ["Puntos", "Según hasta dónde llegues: Campeón 12 · Subcampeón 11 · 3.º 10 · 4.º 9 · eliminado en cuartos 6,5 · eliminado en primera ronda 3."]] },
     { theme: "mario", tag: "Puntos generales", title: "¿Cómo se gana la tarde?", lead: "En Mario Kart y Mario Tennis se arma una tabla. Según tu puesto en cada tabla, sumas:",
       table: true, foot: "Esos puntos + los de Smash = tu total. Gana quien tenga el total más alto. Si dos empatan en un puesto, se reparten esos puntos." },

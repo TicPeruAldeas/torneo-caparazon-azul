@@ -617,7 +617,7 @@ function viewSmash() {
   for (const n of T.NUMS) { const st = C.smash[n].stage || "pend"; (by[st] = by[st] || []).push(n); }
   const tier = (key, cls) => {
     const info = T.SMASH[key], list = by[key] || [];
-    const slots = Array.from({ length: info.slots }, (_, i) => list[i]);
+    const slots = Array.from({ length: C.smashSlots(key) }, (_, i) => list[i]);
     return h("div", { class: "tier " + (cls || "") },
       h("h3", {}, info.label, h("b", {}, T.fmt(info.pts) + " pts")),
       slots.map(n => n ? h("div", { class: "sm" }, av(P[n]), h("div", {}, h("b", {}, P[n].name), h("span", {}, charName(P[n]))))
@@ -625,7 +625,7 @@ function viewSmash() {
   };
   return h("section", { class: "view" },
     h("div", { class: "vhead" }, h("span", { class: "tag", style: "--g:var(--smash)" }, `${C.progress.smash}/${C.progress.smashTotal}`), h("h2", {}, "Super Smash Bros. Ultimate"),
-      h("p", {}, "Eliminación directa 1 vs 1 · 3 vidas · 7 minutos · final al mejor de 3" + smashOutNote())),
+      h("p", {}, `Juegan ${C.progress.smashTotal} · eliminación directa 1 vs 1 · 3 vidas · 7 minutos · final al mejor de 3` + smashOutNote())),
     h("div", { class: "tiers" },
       h("div", { class: "tcol" }, tier("campeon", "champ")),
       h("div", { class: "tcol" }, tier("sub"), tier("tercero"), tier("cuarto")),
