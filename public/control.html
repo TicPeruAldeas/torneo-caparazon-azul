@@ -525,7 +525,7 @@ function mkCard(k) {
 function tabTennis() {
   const C = T.compute({ ...S, tournament: W });
   return h("div", { class: "grid" },
-    h("p", { class: "lead" }, "Anota los juegos que ganó cada pareja (sets a 3 juegos). Cada integrante suma 1 punto por juego ganado y +3 si su pareja gana el partido."),
+    h("p", { class: "lead" }, `Anota los juegos que ganó cada pareja (partido a ${T.TENNIS_TO} juegos). Cada integrante suma 1 punto por juego ganado y +3 si su pareja gana el partido.`),
     h("div", { class: "grid cols-2" }, T.SCHEDULE.map((_, k) => tennisCard(k))),
     rankTable("tennis", C));
 }
@@ -544,12 +544,12 @@ function tennisCard(k) {
         matchHead("tennis", k, m.complete),
         h("div", { class: "tscore" },
           h("span", { class: "names" }, pairNames(A)),
-          h("select", { "aria-label": "Juegos pareja A", onchange: set("a") }, opts(r.a ?? "", ["", 0, 1, 2, 3], v => v === "" ? "—" : v)),
+          h("select", { "aria-label": "Juegos pareja A", onchange: set("a") }, opts(r.a ?? "", ["", ...Array.from({ length: T.TENNIS_TO + 1 }, (_, k) => k)], v => v === "" ? "—" : v)),
           h("span", { class: "dash" }, "-"),
-          h("select", { "aria-label": "Juegos pareja B", onchange: set("b") }, opts(r.b ?? "", ["", 0, 1, 2, 3], v => v === "" ? "—" : v)),
+          h("select", { "aria-label": "Juegos pareja B", onchange: set("b") }, opts(r.b ?? "", ["", ...Array.from({ length: T.TENNIS_TO + 1 }, (_, k) => k)], v => v === "" ? "—" : v)),
           h("span", { class: "names r" }, pairNames(B))),
         m.complete ? h("span", { class: "status ok" }, `Gana ${pairNames(m.winner === "A" ? A : B)}`) : null,
-        invalid ? h("span", { class: "warn" }, "Una pareja debe llegar a 3 juegos para cerrar el partido.") : null);
+        invalid ? h("span", { class: "warn" }, `Una pareja debe llegar a ${T.TENNIS_TO} juegos para cerrar el partido.`) : null);
   }
 }
 

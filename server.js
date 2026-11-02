@@ -147,7 +147,7 @@ function sanitizeTournament(input) {
   }
   for (const [m, res] of Object.entries(obj(t.tennis))) {
     const r = obj(res);
-    if (intIn(+m, 0, MATCHES - 1) && intIn(r.a, 0, 3) && intIn(r.b, 0, 3)) out.tennis[m] = { a: r.a, b: r.b };
+    if (intIn(+m, 0, MATCHES - 1) && intIn(r.a, 0, 6) && intIn(r.b, 0, 6)) out.tennis[m] = { a: r.a, b: r.b };
   }
   for (const [num, stage] of Object.entries(obj(t.smash))) if (intIn(+num, 1, PLAYERS) && SMASH_STAGES.includes(stage)) out.smash[num] = stage;
   for (const g of ["mk", "tennis"]) for (const [num, v] of Object.entries(obj(obj(t.tb)[g]))) if (intIn(+num, 1, PLAYERS) && intIn(v, 1, 99)) out.tb[g][num] = v;

@@ -289,8 +289,9 @@
   #menu .rgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   #menu .rpair { border: 3px solid var(--ink); border-radius: 14px; padding: 10px 12px; display: grid; gap: 8px; }
   #menu .rpair > b { font-size: 16px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
-  #menu .score { display: flex; gap: 8px; }
-  #menu .score button { min-width: 64px; font-family: var(--display); font-size: 26px; }
+  #menu .rname { font-size: 22px; font-weight: 800; }
+  #menu .score { display: flex; gap: 6px; }
+  #menu .score button { flex: 1; min-width: 0; padding-left: 0; padding-right: 0; font-family: var(--display); font-size: 26px; }
   .rnav { position: fixed; top: 50%; z-index: 5; width: 64px; height: 64px; margin-top: -32px; border-radius: 50%; border: 3px solid var(--ink); background: var(--yellow); color: var(--ink);
     font: 400 30px var(--display); box-shadow: 0 4px 0 var(--ink); display: grid; place-items: center; cursor: pointer; touch-action: manipulation; opacity: .9; }
   .rnav:disabled { opacity: .3; }
@@ -1205,13 +1206,13 @@ function renderResult(msg) {
     const cur = (t.tennis || {})[i] || {};
     const sc = { a: cur.a ?? null, b: cur.b ?? null };
     const row = (key, lab, pr) => {
-      const btns = [0, 1, 2, 3].map(v => { const e = b(String(v), () => { sc[key] = v; btns.forEach((x, k) => x.classList.toggle("on", k === v)); touchMenu(); }); if (sc[key] === v) e.classList.add("on"); return e; });
-      return h("div", { class: "rpair" }, h("b", {}, lab), h("div", { class: "rrow" }, h("span", {}, pr.map(n => P[n].name).join(" y ")), h("div", { class: "score" }, btns)));
+      const btns = Array.from({ length: T.TENNIS_TO + 1 }, (_, k) => k).map(v => { const e = b(String(v), () => { sc[key] = v; btns.forEach((x, k) => x.classList.toggle("on", k === v)); touchMenu(); }); if (sc[key] === v) e.classList.add("on"); return e; });
+      return h("div", { class: "rpair" }, h("b", {}, lab), h("span", { class: "rname" }, pr.map(n => P[n].name).join(" y ")), h("div", { class: "score" }, btns));
     };
-    box.append(h("p", { class: "note" }, "¿Cuántos juegos ganó cada pareja? La que gana llega a 3."), h("div", { class: "rgrid" }, row("a", "Pareja A", A), row("b", "Pareja B", B)));
+    box.append(h("p", { class: "note" }, `¿Cuántos juegos ganó cada pareja? La que gana llega a ${T.TENNIS_TO}.`), h("div", { class: "rgrid" }, row("a", "Pareja A", A), row("b", "Pareja B", B)));
     save = () => {
       if (sc.a == null || sc.b == null) return renderResult("Marca los juegos de las dos parejas.");
-      if (!((sc.a === 3) !== (sc.b === 3))) return renderResult("Una sola pareja debe tener 3 juegos.");
+      if (!((sc.a === T.TENNIS_TO) !== (sc.b === T.TENNIS_TO))) return renderResult(`Una sola pareja debe tener ${T.TENNIS_TO} juegos.`);
       send(x => { x.tennis = x.tennis || {}; x.tennis[i] = { a: sc.a, b: sc.b }; x.timerCmd = { match: "pause" }; finishIfLast(x, "tennis"); });
     };
   }
