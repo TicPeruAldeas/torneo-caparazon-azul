@@ -89,6 +89,18 @@ try {
     save();
     console.log(`Plantel actualizado (${e.id})`);
   }
+  // Cambio de meta en Tennis, una vez por id: el ganador anotado con la meta vieja pasa a la nueva
+  for (const r of restore.tennisTo || []) {
+    if (!r.id || state.restored.includes(r.id)) continue;
+    let n = 0;
+    for (const m of Object.values(state.tournament?.tennis || {})) {
+      if (m.a === r.from && m.b < r.from) { m.a = r.to; n++; }
+      else if (m.b === r.from && m.a < r.from) { m.b = r.to; n++; }
+    }
+    state.restored.push(r.id);
+    save();
+    console.log(`Tennis a ${r.to}: ${n} resultados actualizados (${r.id})`);
+  }
 } catch (err) {
   if (err.code !== "ENOENT") console.error("No se pudo restaurar:", err.message);
 }
@@ -147,7 +159,7 @@ function sanitizeTournament(input) {
   }
   for (const [m, res] of Object.entries(obj(t.tennis))) {
     const r = obj(res);
-    if (intIn(+m, 0, MATCHES - 1) && intIn(r.a, 0, 6) && intIn(r.b, 0, 6)) out.tennis[m] = { a: r.a, b: r.b };
+    if (intIn(+m, 0, MATCHES - 1) && intIn(r.a, 0, 7) && intIn(r.b, 0, 7)) out.tennis[m] = { a: r.a, b: r.b };
   }
   for (const [num, stage] of Object.entries(obj(t.smash))) if (intIn(+num, 1, PLAYERS) && SMASH_STAGES.includes(stage)) out.smash[num] = stage;
   for (const g of ["mk", "tennis"]) for (const [num, v] of Object.entries(obj(obj(t.tb)[g]))) if (intIn(+num, 1, PLAYERS) && intIn(v, 1, 99)) out.tb[g][num] = v;

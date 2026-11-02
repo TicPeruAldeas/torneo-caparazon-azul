@@ -596,7 +596,7 @@ function viewGame(g) {
   const color = `var(--${g})`;
   const v = h("section", { class: "view" },
     h("div", { class: "vhead" }, h("span", { class: "tag", style: `--g:${color}` }, `${done}/${T.MATCHES}`), h("h2", {}, T.GAME_NAMES[g]),
-      h("p", {}, done >= T.MATCHES ? "🏁 Tabla final · todas las partidas jugadas" : g === "mk" ? "Supervivencia · 25 − posición · +3 a la mejor pareja" : "Dobles a 6 puntos · tus puntos del partido · +3 al ganar")),
+      h("p", {}, done >= T.MATCHES ? "🏁 Tabla final · todas las partidas jugadas" : g === "mk" ? "Supervivencia · 25 − posición · +3 a la mejor pareja" : "Dobles a 7 puntos · tus puntos del partido · +3 al ganar")),
     h("div", { class: "colhead game" }, h("span", {}, "Pos"), h("span"), h("span", { style: "text-align:left" }, "Jugador"),
       h("span", {}, "Jugadas"), h("span", {}, g === "mk" ? "1.º puestos" : "Victorias"), h("span", {}, "Puntos"), h("span", {}, "Pts. generales")));
   v.append(board("game", order, (n) => {
@@ -655,7 +655,7 @@ function viewMatch() {
   const nx = T.SCHEDULE[i + 1];
   return h("section", { class: "view" },
     h("div", { class: "vhead" }, h("span", { class: "tag", style: `--g:var(--${g})` }, T.GAME_SHORT[g]), h("h2", {}, `Partida ${i + 1} de ${T.MATCHES}`),
-      h("p", {}, g === "mk" ? "Tus puntos = 25 − tu puesto · +3 a la pareja que sume más" : "Un juego a 6 puntos · sumas los puntos de tu pareja · +3 a la ganadora")),
+      h("p", {}, g === "mk" ? "Tus puntos = 25 − tu puesto · +3 a la pareja que sume más" : "Un juego a 7 puntos · sumas los puntos de tu pareja · +3 a la ganadora")),
     h("div", { class: "match" }, pair("A", A), mid, pair("B", B)),
     nx ? h("div", { class: "next" }, "Siguiente: ", h("b", {}, `Partida ${i + 2} · ${pairNames(nx[0])} vs ${pairNames(nx[1])}`)) : h("div", { class: "next" }, "Última partida de este juego"));
 }

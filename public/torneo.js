@@ -9,7 +9,7 @@
     [[5, 12], [1, 4]], [[2, 8], [7, 9]], [[6, 10], [3, 11]], [[4, 7], [5, 9]], [[2, 6], [10, 12]], [[1, 11], [3, 8]]
   ];
   const PLAYERS = 12, MATCHES = SCHEDULE.length;
-  const TENNIS_TO = 6; // Mario Tennis: gana el partido la pareja que llega primero a 6 puntos
+  const TENNIS_TO = 7; // Mario Tennis: gana el partido la pareja que llega primero a 7 puntos
   const NUMS = Array.from({ length: PLAYERS }, (_, i) => i + 1);
   const GAME_NAMES = { mk: "Mario Kart World", tennis: "Mario Tennis", smash: "Smash Bros. Ultimate" };
   const GAME_SHORT = { mk: "Mario Kart", tennis: "Tennis", smash: "Smash" };
@@ -199,12 +199,12 @@
       ["Bono +3", "Si tu pareja gana el versus, cada uno recibe +3 puntos adicionales, individualmente. Ej.: si llegaste 3.º, te tocan 22 por tu puesto + 3 del bono = 25.", "gold"],
       ["Al final", "Se suman tus 4 carreras. Si dos quedan con los mismos puntos, va adelante quien ganó más carreras."]] },
     { theme: "tennis", tag: "Juego 2", title: "Mario Tennis · tus puntos", sections: [
-      ["Partido", "Cada partido es un solo juego entre 2 parejas. Gana la pareja que llega primero a 6 puntos."],
+      ["Partido", "Cada partido es un solo juego entre 2 parejas. Gana la pareja que llega primero a 7 puntos."],
       ["Tus puntos", "Te llevas los puntos que hizo tu pareja en el partido, ganes o pierdas."],
       ["Bono +3", "Solo si tu pareja gana el partido: +3 para cada uno. Si pierden, no hay bono.", "gold"],
       ["Al final", "Se suman tus 4 partidos. Si dos quedan con los mismos puntos, va adelante quien ganó más partidos."]],
-      example: { title: "Ejemplo: el partido termina 6 a 4", head: ["", "Puntos en el partido", "Bono", "Puntos para cada uno"],
-        rows: [["Pareja que gana", "6", "+3", "9"], ["Pareja que pierde", "4", "—", "4"]] } },
+      example: { title: "Ejemplo: el partido termina 7 a 4", head: ["", "Puntos en el partido", "Bono", "Puntos para cada uno"],
+        rows: [["Pareja que gana", "7", "+3", "10"], ["Pareja que pierde", "4", "—", "4"]] } },
     { theme: "smash", tag: "Juego 3", title: "Smash Bros. · tus puntos", sections: [
       ["Formato", "Todos contra todos en llaves 1 vs 1: si pierdes, quedas eliminado."],
       ["Puntos", "Según hasta dónde llegues: Campeón 12 · Subcampeón 11 · 3.º 10 · 4.º 9 · eliminado en cuartos 6,5 · eliminado en primera ronda 3."]] },
