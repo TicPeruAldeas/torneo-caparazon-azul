@@ -596,7 +596,7 @@ function viewGame(g) {
   const color = `var(--${g})`;
   const v = h("section", { class: "view" },
     h("div", { class: "vhead" }, h("span", { class: "tag", style: `--g:${color}` }, `${done}/${T.MATCHES}`), h("h2", {}, T.GAME_NAMES[g]),
-      h("p", {}, done >= T.MATCHES ? "🏁 Tabla final · todas las partidas jugadas" : g === "mk" ? "Supervivencia · 25 − posición · +3 a la mejor pareja" : "Dobles · 1 punto por juego · +3 al ganar")),
+      h("p", {}, done >= T.MATCHES ? "🏁 Tabla final · todas las partidas jugadas" : g === "mk" ? "Supervivencia · 25 − posición · +3 a la mejor pareja" : "Dobles a 6 puntos · tus puntos del partido · +3 al ganar")),
     h("div", { class: "colhead game" }, h("span", {}, "Pos"), h("span"), h("span", { style: "text-align:left" }, "Jugador"),
       h("span", {}, "Jugadas"), h("span", {}, g === "mk" ? "1.º puestos" : "Victorias"), h("span", {}, "Puntos"), h("span", {}, "Pts. generales")));
   v.append(board("game", order, (n) => {
@@ -655,7 +655,7 @@ function viewMatch() {
   const nx = T.SCHEDULE[i + 1];
   return h("section", { class: "view" },
     h("div", { class: "vhead" }, h("span", { class: "tag", style: `--g:var(--${g})` }, T.GAME_SHORT[g]), h("h2", {}, `Partida ${i + 1} de ${T.MATCHES}`),
-      h("p", {}, g === "mk" ? "Tus puntos = 25 − tu puesto · +3 a la pareja que sume más" : "1 punto por juego ganado · +3 a la pareja ganadora")),
+      h("p", {}, g === "mk" ? "Tus puntos = 25 − tu puesto · +3 a la pareja que sume más" : "Un juego a 6 puntos · sumas los puntos de tu pareja · +3 a la ganadora")),
     h("div", { class: "match" }, pair("A", A), mid, pair("B", B)),
     nx ? h("div", { class: "next" }, "Siguiente: ", h("b", {}, `Partida ${i + 2} · ${pairNames(nx[0])} vs ${pairNames(nx[1])}`)) : h("div", { class: "next" }, "Última partida de este juego"));
 }
@@ -1209,10 +1209,10 @@ function renderResult(msg) {
       const btns = Array.from({ length: T.TENNIS_TO + 1 }, (_, k) => k).map(v => { const e = b(String(v), () => { sc[key] = v; btns.forEach((x, k) => x.classList.toggle("on", k === v)); touchMenu(); }); if (sc[key] === v) e.classList.add("on"); return e; });
       return h("div", { class: "rpair" }, h("b", {}, lab), h("span", { class: "rname" }, pr.map(n => P[n].name).join(" y ")), h("div", { class: "score" }, btns));
     };
-    box.append(h("p", { class: "note" }, `¿Cuántos juegos ganó cada pareja? La que gana llega a ${T.TENNIS_TO}.`), h("div", { class: "rgrid" }, row("a", "Pareja A", A), row("b", "Pareja B", B)));
+    box.append(h("p", { class: "note" }, `¿Cuántos puntos hizo cada pareja? La que gana llega a ${T.TENNIS_TO}.`), h("div", { class: "rgrid" }, row("a", "Pareja A", A), row("b", "Pareja B", B)));
     save = () => {
       if (sc.a == null || sc.b == null) return renderResult("Marca los juegos de las dos parejas.");
-      if (!((sc.a === T.TENNIS_TO) !== (sc.b === T.TENNIS_TO))) return renderResult(`Una sola pareja debe tener ${T.TENNIS_TO} juegos.`);
+      if (!((sc.a === T.TENNIS_TO) !== (sc.b === T.TENNIS_TO))) return renderResult(`Una sola pareja debe tener ${T.TENNIS_TO} puntos.`);
       send(x => { x.tennis = x.tennis || {}; x.tennis[i] = { a: sc.a, b: sc.b }; x.timerCmd = { match: "pause" }; finishIfLast(x, "tennis"); });
     };
   }
